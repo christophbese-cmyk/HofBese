@@ -1435,7 +1435,7 @@ function renderSidebar() {
         <button class="tab-btn ${tab === 'kunden' ? 'active' : ''}" onclick="switchTab('kunden')" title="Kunden"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg></button>
         <button class="tab-btn ${tab === 'lagerhalle' ? 'active' : ''}" onclick="switchTab('lagerhalle')" title="Lagerhalle"><svg viewBox="0 0 24 24"><path d="M3 21V8l9-5 9 5v13"/><rect x="9" y="12" width="6" height="9"/><line x1="3" y1="21" x2="21" y2="21"/></svg></button>
         <button class="tab-btn ${tab === 'backup' ? 'active' : ''}" onclick="switchTab('backup')" title="Backup"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
-        <button class="tab-btn" id="syncTabBtn" onclick="doSyncFromHandy()" title="Sync vom Handy anfordern" style="position:relative;font-size:0.65rem;font-weight:700;">Sync</button>
+        ${window.innerWidth < 768 ? '' : `<button class="tab-btn ${_syncEnabled ? 'active' : ''}" id="syncTabBtn" onclick="doSyncFromHandy()" title="Sync vom Handy anfordern" style="position:relative;font-size:0.65rem;font-weight:700;">Sync</button>`}
       </div>
     </div>
     <div id="connection-info" class="sidebar-content" style="display:${connDisplay};">

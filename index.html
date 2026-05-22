@@ -353,7 +353,6 @@ header .save-btn:hover { background: rgba(255,255,255,0.3); }
     <img src="icons/icon-192.png" class="app-logo" alt="Logo">
     <h1 id="appTitle">HofBese</h1>
     <span id="offlineBadge" style="display:none;background:#ff8a65;color:#fff;font-size:0.65rem;font-weight:700;padding:3px 8px;border-radius:4px;">OFFLINE</span>
-    <button id="syncRequestBtn" onclick="onSyncRequestTap()" style="display:none;background:#ff9800;color:#fff;border:none;font-size:0.65rem;font-weight:700;padding:3px 8px;border-radius:4px;cursor:pointer;white-space:nowrap;">📲 SYNC</button>
     <button class="save-btn" onclick="saveData();showToast('Daten gespeichert')" title="Speichern"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button>
     <button class="save-btn" onclick="importData()" title="Import"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
     <button class="save-btn" id="installBtn" onclick="installPWA()" title="App installieren"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
@@ -545,23 +544,6 @@ function pinSubmit() {
     return;
   }
 
-  // confirmSync: PIN bestätigen und Daten an PC senden
-  if (_pinMode === 'confirmSync') {
-    if (_pinHash && hashPIN(_pinBuffer) === _pinHash) {
-      hidePINScreen();
-      _pinMode = 'check';
-      pushDataToServer();
-    } else {
-      const error = document.getElementById('pinError');
-      error.textContent = 'PIN falsch';
-      error.style.display = 'block';
-      shakeDots();
-      _pinBuffer = '';
-      updatePINDots();
-    }
-    return;
-  }
-
   // check mode: erst lokal prüfen
   if (_pinHash) {
     if (hashPIN(_pinBuffer) === _pinHash) {
@@ -582,7 +564,7 @@ function pinSubmit() {
   }
 
   // Kein lokaler PIN → Server versuchen
-  fetchApi('/api/data', { headers: { 'X-PIN': _pinBuffer }, signal: AbortSignal.timeout(3000) })
+  fetch('/api/data', { headers: { 'X-PIN': _pinBuffer }, signal: AbortSignal.timeout(3000) })
     .then(r => {
       if (r.status === 401) throw new Error('wrong');
       return r.json();
@@ -599,7 +581,6 @@ function pinSubmit() {
       renderAll();
       renderSidebar();
       showToast('Verbunden & sync aktiv');
-      startSyncRequestPolling();
     })
     .catch(() => {
       // Server nicht erreichbar → lokal ohne PIN starten
@@ -628,7 +609,7 @@ function checkPINStatus() {
   }
 
   // Kein lokaler PIN → Server prüfen (optional)
-  fetchApi('/api/pin-status', { signal: AbortSignal.timeout(2000) })
+  fetch('/api/pin-status', { signal: AbortSignal.timeout(2000) })
     .then(r => r.json())
     .then(data => {
       if (data.setup) {
@@ -651,25 +632,6 @@ function checkPINStatus() {
 }
 
 // ============ SYNC (manuell, mit Abfrage auf PC) ============
-let _serverBaseUrl = localStorage.getItem('heubestellung_server_url') || '';
-function apiUrl(path) { return _serverBaseUrl ? _serverBaseUrl + path : path; }
-function api(path) { return _serverBaseUrl + path; }
-function fetchApi(path, opts) { return fetch(api(path), opts); }
-function setServerUrl() {
-  const el = document.getElementById('serverUrlInput');
-  if (!el) return;
-  let url = el.value.trim().replace(/\/+$/, '');
-  if (url && !/^https?:\/\//i.test(url)) url = 'http://' + url;
-  _serverBaseUrl = url;
-  if (url) {
-    localStorage.setItem('heubestellung_server_url', url);
-    showToast('Server-Adresse gespeichert');
-  } else {
-    localStorage.removeItem('heubestellung_server_url');
-    showToast('Server-Adresse entfernt');
-  }
-  tryConnectServer();
-}
 let _syncEnabled = false;
 let _serverVersion = 0;
 let _syncing = false;
@@ -680,7 +642,6 @@ if (!_deviceName) {
 }
 let _pendingSyncTimer = null;
 let _showingSyncModal = false;
-let _syncWaitActive = false;
 let _syncChoice = localStorage.getItem('heubestellung_sync_choice') || '';
 
 // PC pollt automatisch auf pending Sync-Anfragen (nicht mehr needed – Sync per Button)
@@ -694,7 +655,7 @@ function tryConnectServer() {
 
   if (isMobile) {
     // Handy: Nur Server-Erreichbarkeit prüfen, kein automatischer Daten-Push
-    fetchApi('/api/pin-status', { signal: AbortSignal.timeout(5000) })
+    fetch('/api/pin-status', { signal: AbortSignal.timeout(5000) })
     .then(r => {
       if (!r.ok) throw new Error();
       return r.json();
@@ -705,7 +666,6 @@ function tryConnectServer() {
       renderSidebar();
       showToast('Verbunden – Sync per Button');
       startReconnect();
-      startSyncRequestPolling();
     })
     .catch(() => {
       _syncEnabled = false;
@@ -716,7 +676,7 @@ function tryConnectServer() {
     });
   } else {
     // PC: lokalen Server prüfen
-    fetchApi('/api/pin-status', { signal: AbortSignal.timeout(3000) })
+    fetch('/api/pin-status', { signal: AbortSignal.timeout(3000) })
     .then(r => {
       if (!r.ok) throw new Error();
       return r.json();
@@ -727,7 +687,6 @@ function tryConnectServer() {
       renderSidebar();
       showToast('Server verbunden');
       startReconnect();
-      startSyncRequestPolling();
     })
     .catch(() => {
       _syncEnabled = false;
@@ -737,66 +696,6 @@ function tryConnectServer() {
       startReconnect();
     });
   }
-}
-
-// Handy: Prüft ob PC Sync angefordert hat
-let _syncRequestTimer = null;
-let _syncRequestPending = false;
-function startSyncRequestPolling() {
-  if (_syncRequestTimer) return;
-  _syncRequestTimer = setInterval(() => {
-    const isMobile = window.innerWidth < 768;
-    if (!isMobile) return;
-    if (_syncRequestPending) return;
-    fetchApi('/api/sync-request', { headers: getPINHeader(), signal: AbortSignal.timeout(3000) })
-      .then(r => r.json())
-      .then(data => {
-        if (data.requested && !_syncRequestPending) {
-          _syncRequestPending = true;
-          renderAll();
-          renderSidebar();
-          updateOfflineBadge();
-          showToast('📲 PC fordert Daten an – Sync bestätigen');
-        }
-      })
-      .catch(() => {});
-  }, 3000);
-}
-function onSyncRequestTap() {
-  // PIN-Eingabe zur Bestätigung verlangen
-  if (_pinHash) {
-    _pinMode = 'confirmSync';
-    document.getElementById('pinTitle').textContent = 'Sync bestätigen';
-    document.getElementById('pinSubtitle').textContent = 'PIN zur Bestätigung eingeben';
-    document.getElementById('pinOverlay').style.display = 'flex';
-    pinClear();
-  } else {
-    // Kein PIN gesetzt – direkt pushen
-    pushDataToServer();
-  }
-}
-function pushDataToServer() {
-  showToast('Sende Daten an PC...');
-  fetchApi('/api/data', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getPINHeader(), 'X-Device': _deviceName },
-    body: JSON.stringify({
-      customers: state.customers, reservations: state.reservations,
-      fields: state.fields, workLogs: state.workLogs, harvests: state.harvests,
-      hallSlots: state.hallSlots, device: _deviceName
-    }),
-    signal: AbortSignal.timeout(5000)
-  })
-  .then(r => r.json())
-  .then(() => {
-    fetchApi('/api/sync-request', { method: 'DELETE', headers: getPINHeader() }).catch(()=>{});
-    _syncRequestPending = false;
-    updateOfflineBadge();
-    renderAll();
-    renderSidebar();
-    showToast('Daten an PC gesendet');
-  })
-  .catch(() => { showToast('Fehler beim Senden'); });
 }
 
 function showFirstTimeSyncModal(serverData) {
@@ -812,7 +711,6 @@ function showFirstTimeSyncModal(serverData) {
     renderSidebar();
     showToast('Verbunden & sync aktiv');
     startReconnect();
-    startSyncRequestPolling();
     return;
   }
 
@@ -821,7 +719,6 @@ function showFirstTimeSyncModal(serverData) {
     renderAll();
     renderSidebar();
     showToast('Verbunden – lokale Daten aktiv');
-    startSyncRequestPolling();
     return;
   }
 
@@ -858,7 +755,7 @@ function applyFirstTimeSync(mode) {
   _syncChoice = mode;
   closeModal();
 
-  fetchApi('/api/data', { headers: getPINHeader(), signal: AbortSignal.timeout(5000) })
+  fetch('/api/data', { headers: getPINHeader(), signal: AbortSignal.timeout(5000) })
     .then(r => {
       if (!r.ok) throw new Error('Sync-Fehler ' + r.status);
       return r.json();
@@ -936,7 +833,7 @@ function saveData() {
 function syncToServer() {
   if (_syncing) return Promise.reject();
   _syncing = true;
-  return fetchApi('/api/data', {
+  return fetch('/api/data', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getPINHeader(), 'X-Device': _deviceName },
     body: JSON.stringify({
@@ -963,7 +860,7 @@ function syncToServer() {
 
 // Sync vom Server (Server → lokal)
 function syncFromServer() {
-  fetchApi('/api/data', { headers: getPINHeader(), signal: AbortSignal.timeout(5000) })
+  fetch('/api/data', { headers: getPINHeader(), signal: AbortSignal.timeout(5000) })
     .then(r => {
       if (!r.ok) throw new Error('Sync-Fehler ' + r.status);
       return r.json();
@@ -1122,7 +1019,7 @@ function startReconnect() {
   if (_reconnectTimer) return;
   updateOfflineBadge();
   _reconnectTimer = setInterval(() => {
-    fetchApi('/api/pin-status', { headers: getPINHeader(), signal: AbortSignal.timeout(3000) })
+    fetch('/api/pin-status', { headers: getPINHeader(), signal: AbortSignal.timeout(3000) })
       .then(r => r.json())
       .then(() => {
         clearInterval(_reconnectTimer);
@@ -1155,8 +1052,6 @@ function renderAll() {
 function updateOfflineBadge() {
   const badge = document.getElementById('offlineBadge');
   if (badge) badge.style.display = _syncEnabled ? 'none' : 'inline';
-  const syncBtn = document.getElementById('syncRequestBtn');
-  if (syncBtn) syncBtn.style.display = _syncRequestPending ? 'inline' : 'none';
 }
 
 function renderBackup() {
@@ -1175,16 +1070,6 @@ function renderBackup() {
   html += `<span id="backup-url" style="font-weight:700;color:#1B5E20;">Lade URL...</span>`;
   html += `</div>`;
   html += `<div style="margin-top:8px;font-size:0.78rem;color:var(--text-light);">Chrome am Handy → ⋮ → "Zum Startbildschirm hinzufügen"</div>`;
-  html += `</div>`;
-
-  // Server-Adresse für PWA Sync
-  html += `<div class="card" style="margin-bottom:12px;border-left:4px solid #ff9800;">`;
-  html += `<div style="font-weight:700;margin-bottom:8px;color:#e65100;">Server-Adresse (für Sync vom Handy)</div>`;
-  html += `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">`;
-  html += `<input id="serverUrlInput" type="text" value="${escapeHtml(_serverBaseUrl)}" placeholder="z.B. http://192.168.178.41:8080" style="flex:1;min-width:200px;padding:8px 10px;border:2px solid var(--border);border-radius:6px;font-size:0.85rem;">`;
-  html += `<button class="btn btn-sm" onclick="setServerUrl()" style="background:#e65100;color:#fff;border:none;">Speichern</button>`;
-  html += `</div>`;
-  html += `<div style="font-size:0.78rem;color:var(--text-light);margin-top:6px;">Nur nötig wenn die PWA von GitHub Pages installiert wurde. Die Adresse steht auf dem PC im Backup-Tab.</div>`;
   html += `</div>`;
 
   let folderSection = '';
@@ -1247,7 +1132,7 @@ function renderBackup() {
 
   // QR-Code generieren
   setTimeout(() => {
-    fetchApi('/api/ip')
+    fetch('/api/ip')
       .then(r => r.json())
       .then(data => {
         const url = `http://${data.ip}:${data.port}`;
@@ -1428,6 +1313,10 @@ function renderCustomerList() {
 function renderSidebar() {
   const sidebar = document.getElementById('sidebar');
   const tab = state.currentTab;
+  const syncDot = _syncEnabled
+    ? '<span style="position:absolute;top:4px;right:4px;width:12px;height:12px;background:#2e7d32;border-radius:50%;border:2px solid #e8e8e8;"></span>'
+    : '<span style="position:absolute;top:4px;right:4px;width:12px;height:12px;background:#ff8a65;border-radius:50%;border:2px solid #e8e8e8;"></span>';
+  const syncLabel = _syncEnabled ? 'Sync' : 'Offline';
   const connDisplay = _connInfoVisible ? 'block' : 'none';
   sidebar.innerHTML = `
     <div class="sidebar-tabs">
@@ -1435,7 +1324,7 @@ function renderSidebar() {
         <button class="tab-btn ${tab === 'kunden' ? 'active' : ''}" onclick="switchTab('kunden')" title="Kunden"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg></button>
         <button class="tab-btn ${tab === 'lagerhalle' ? 'active' : ''}" onclick="switchTab('lagerhalle')" title="Lagerhalle"><svg viewBox="0 0 24 24"><path d="M3 21V8l9-5 9 5v13"/><rect x="9" y="12" width="6" height="9"/><line x1="3" y1="21" x2="21" y2="21"/></svg></button>
         <button class="tab-btn ${tab === 'backup' ? 'active' : ''}" onclick="switchTab('backup')" title="Backup"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
-        ${window.innerWidth < 768 ? '' : `<button class="tab-btn ${_syncEnabled ? 'active' : ''}" id="syncTabBtn" onclick="doSyncFromHandy()" title="Sync vom Handy anfordern" style="position:relative;font-size:0.65rem;font-weight:700;">Sync</button>`}
+        <button class="tab-btn ${_connInfoVisible ? 'active' : ''}" id="syncTabBtn" onclick="doSyncFromHandy()" title="Sync vom Handy" style="position:relative;font-size:0.7rem;font-weight:700;">${syncDot}${syncLabel}</button>
       </div>
     </div>
     <div id="connection-info" class="sidebar-content" style="display:${connDisplay};">
@@ -1444,72 +1333,24 @@ function renderSidebar() {
   `;
 }
 
-// Sync-Button: Fordert Handy-Daten an und wartet
+// Sync-Button: Zeigt Bestätigung, dann lädt/vom Server (Handy & PC)
 function doSyncFromHandy() {
-  if (_syncWaitActive) { _syncWaitActive = false; closeModal(); }
-  if (window.innerWidth < 768) { showToast('Nur auf dem PC'); return; }
   if (_reconnectTimer) { clearInterval(_reconnectTimer); _reconnectTimer = null; }
   showModal(`
-    <h3>Daten vom Handy holen?</h3>
-    <p style="margin-bottom:16px;color:var(--text-light);">
-      Der PC fordert die aktuellen Daten vom Handy an.<br>
-      <strong>Das Handy muss im selben Netzwerk sein.</strong>
-    </p>
-    <div style="text-align:center;margin-bottom:16px;font-size:2rem;color:var(--primary);" id="syncWaitIcon">&#8987;</div>
-    <div id="syncWaitText" style="text-align:center;color:var(--text-light);font-size:0.9rem;">Sync wird angefordert...</div>
-    <div class="btn-row" style="margin-top:12px;">
-      <button class="btn" onclick="closeModal();_syncWaitActive=false;">Abbrechen</button>
+    <h3>Daten vom Server laden?</h3>
+    <p style="margin-bottom:16px;color:var(--text-light);">Sollen die aktuellen Daten vom Server auf dieses Gerät geladen werden?</p>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="confirmSyncFromPhone()">Ja</button>
+      <button class="btn" onclick="closeModal()">Nein</button>
     </div>
   `);
-  _syncWaitActive = true;
-  // PC-Daten zuerst auf Server pushen
-  fetchApi('/api/data', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', ...getPINHeader(), 'X-Device': _deviceName },
-    body: JSON.stringify({
-      customers: state.customers, reservations: state.reservations,
-      fields: state.fields, workLogs: state.workLogs, harvests: state.harvests,
-      hallSlots: state.hallSlots, device: _deviceName
-    }),
-    signal: AbortSignal.timeout(5000)
-  }).then(() => {
-    // Sync vom Handy anfordern
-    return fetchApi('/api/request-sync', { method: 'POST', headers: getPINHeader(), signal: AbortSignal.timeout(3000) });
-  }).then(() => {
-    document.getElementById('syncWaitText').textContent = 'Warte auf Antwort vom Handy...';
-    waitForPhoneData();
-  }).catch(() => {
-    document.getElementById('syncWaitText').textContent = 'Server nicht erreichbar';
-    document.getElementById('syncWaitIcon').innerHTML = '&#10060;';
-    _syncWaitActive = false;
-  });
-}
-
-function waitForPhoneData() {
-  if (!_syncWaitActive) return;
-  fetchApi('/api/pending-sync', { headers: getPINHeader(), signal: AbortSignal.timeout(3000) })
-    .then(r => r.json())
-    .then(data => {
-      if (!_syncWaitActive) return;
-      if (data.device && data.device !== _deviceName) {
-        _syncWaitActive = false;
-        closeModal();
-        showSyncRequestModal(data.device, data.data);
-        return;
-      }
-      setTimeout(() => waitForPhoneData(), 1500);
-    })
-    .catch(() => {
-      if (!_syncWaitActive) return;
-      setTimeout(() => waitForPhoneData(), 1500);
-    });
 }
 
 // PC: Daten vom Server laden (nach Bestätigung)
 function confirmSyncFromPhone() {
   closeModal();
   showToast('Hole Daten vom Server...');
-  fetchApi('/api/data', { headers: getPINHeader(), signal: AbortSignal.timeout(5000) })
+  fetch('/api/data', { headers: getPINHeader(), signal: AbortSignal.timeout(5000) })
     .then(r => {
       if (r.status === 401) { showToast('PIN falsch'); throw new Error('PIN falsch'); }
       if (!r.ok) throw new Error('Sync-Fehler ' + r.status);
@@ -1551,17 +1392,7 @@ function confirmSyncFromPhone() {
       }
     })
     .catch(() => {
-      // Server nicht erreichbar
-      if (_serverBaseUrl) {
-        // Server konfiguriert aber nicht erreichbar → PIN-Screen zeigen (Nutzer kann PIN eingeben)
-        showPINScreen('check');
-      } else if (state.customers.length > 0) {
-        hidePINScreen();
-        showToast('Offline – kein Server-PIN erforderlich');
-        startReconnect();
-      } else {
-        showPINScreen('setup');
-      }
+      showToast('Server nicht erreichbar');
     });
 }
 
@@ -1599,7 +1430,7 @@ function acceptSync(mode) {
   _syncChoice = mode;
   closeModal();
   _showingSyncModal = false;
-  fetchApi('/api/sync-accept', {
+  fetch('/api/sync-accept', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ mode })
@@ -1621,7 +1452,7 @@ function acceptSync(mode) {
 function declineSync() {
   closeModal();
   _showingSyncModal = false;
-  fetchApi('/api/sync-decline', { method: 'POST' }).catch(() => {});
+  fetch('/api/sync-decline', { method: 'POST' }).catch(() => {});
   showToast('Sync abgelehnt');
 }
 
@@ -1638,7 +1469,7 @@ function loadConnectionInfo() {
   if (_connInfoTimer) clearInterval(_connInfoTimer);
   function fetchInfo() {
     if (!_connInfoVisible) { if (_connInfoTimer) clearInterval(_connInfoTimer); return; }
-    fetchApi('/api/info', { signal: AbortSignal.timeout(3000) })
+    fetch('/api/info', { signal: AbortSignal.timeout(3000) })
       .then(r => r.json())
       .then(info => {
         const el = document.getElementById('conn-details');
@@ -2358,7 +2189,7 @@ function closeModal() {
   document.getElementById('modalOverlay').classList.remove('active');
   if (_showingSyncModal) {
     _showingSyncModal = false;
-    fetchApi('/api/sync-decline', { method: 'POST' }).catch(() => {});
+    fetch('/api/sync-decline', { method: 'POST' }).catch(() => {});
   }
 }
 
@@ -2698,7 +2529,6 @@ if (state.customers.length === 0 && state.reservations.length === 0) {
 }
 if (state.fields.length === 0 && DEFAULT_FIELDS.length > 0) { state.fields = JSON.parse(JSON.stringify(DEFAULT_FIELDS)); saveData(); }
 checkPINStatus();
-startSyncRequestPolling();
 loadBackupHandle().then(h => { backupHandle = h; renderSidebar(); });
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(()=>{});

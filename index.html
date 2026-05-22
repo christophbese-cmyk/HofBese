@@ -581,6 +581,7 @@ function pinSubmit() {
       renderAll();
       renderSidebar();
       showToast('Verbunden & sync aktiv');
+      startSyncRequestPolling();
     })
     .catch(() => {
       // Server nicht erreichbar → lokal ohne PIN starten
@@ -642,6 +643,7 @@ if (!_deviceName) {
 }
 let _pendingSyncTimer = null;
 let _showingSyncModal = false;
+let _syncWaitActive = false;
 let _syncChoice = localStorage.getItem('heubestellung_sync_choice') || '';
 
 // PC pollt automatisch auf pending Sync-Anfragen (nicht mehr needed – Sync per Button)
@@ -666,6 +668,7 @@ function tryConnectServer() {
       renderSidebar();
       showToast('Verbunden – Sync per Button');
       startReconnect();
+      startSyncRequestPolling();
     })
     .catch(() => {
       _syncEnabled = false;
@@ -687,6 +690,7 @@ function tryConnectServer() {
       renderSidebar();
       showToast('Server verbunden');
       startReconnect();
+      startSyncRequestPolling();
     })
     .catch(() => {
       _syncEnabled = false;
@@ -696,6 +700,42 @@ function tryConnectServer() {
       startReconnect();
     });
   }
+}
+
+// Handy: Prüft ob PC Sync angefordert hat
+let _syncRequestTimer = null;
+function startSyncRequestPolling() {
+  if (_syncRequestTimer) return;
+  _syncRequestTimer = setInterval(() => {
+    if (!_syncEnabled) return;
+    const isMobile = window.innerWidth < 768;
+    if (!isMobile) return;
+    fetch('/api/sync-request', { headers: getPINHeader(), signal: AbortSignal.timeout(3000) })
+      .then(r => r.json())
+      .then(data => {
+        if (data.requested) {
+          console.log('PC fordert Sync an – sende Daten...');
+          showToast('PC fordert Daten an – sende...');
+          fetch('/api/data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...getPINHeader(), 'X-Device': _deviceName },
+            body: JSON.stringify({
+              customers: state.customers, reservations: state.reservations,
+              fields: state.fields, workLogs: state.workLogs, harvests: state.harvests,
+              hallSlots: state.hallSlots, device: _deviceName
+            }),
+            signal: AbortSignal.timeout(5000)
+          })
+          .then(r => r.json())
+          .then(() => {
+            fetch('/api/sync-request', { method: 'DELETE', headers: getPINHeader() }).catch(()=>{});
+            showToast('Daten an PC gesendet');
+          })
+          .catch(() => {});
+        }
+      })
+      .catch(() => {});
+  }, 3000);
 }
 
 function showFirstTimeSyncModal(serverData) {
@@ -711,6 +751,7 @@ function showFirstTimeSyncModal(serverData) {
     renderSidebar();
     showToast('Verbunden & sync aktiv');
     startReconnect();
+    startSyncRequestPolling();
     return;
   }
 
@@ -719,6 +760,7 @@ function showFirstTimeSyncModal(serverData) {
     renderAll();
     renderSidebar();
     showToast('Verbunden – lokale Daten aktiv');
+    startSyncRequestPolling();
     return;
   }
 
@@ -1333,17 +1375,63 @@ function renderSidebar() {
   `;
 }
 
-// Sync-Button: Zeigt Bestätigung, dann lädt/vom Server (Handy & PC)
+// Sync-Button: Fordert Handy-Daten an und wartet
 function doSyncFromHandy() {
   if (_reconnectTimer) { clearInterval(_reconnectTimer); _reconnectTimer = null; }
   showModal(`
-    <h3>Daten vom Server laden?</h3>
-    <p style="margin-bottom:16px;color:var(--text-light);">Sollen die aktuellen Daten vom Server auf dieses Gerät geladen werden?</p>
-    <div class="btn-row">
-      <button class="btn btn-primary" onclick="confirmSyncFromPhone()">Ja</button>
-      <button class="btn" onclick="closeModal()">Nein</button>
+    <h3>Daten vom Handy holen?</h3>
+    <p style="margin-bottom:16px;color:var(--text-light);">
+      Der PC fordert die aktuellen Daten vom Handy an.<br>
+      <strong>Das Handy muss im selben Netzwerk sein.</strong>
+    </p>
+    <div style="text-align:center;margin-bottom:16px;font-size:2rem;color:var(--primary);" id="syncWaitIcon">&#8987;</div>
+    <div id="syncWaitText" style="text-align:center;color:var(--text-light);font-size:0.9rem;">Sync wird angefordert...</div>
+    <div class="btn-row" style="margin-top:12px;">
+      <button class="btn" onclick="closeModal();_syncWaitActive=false;">Abbrechen</button>
     </div>
   `);
+  _syncWaitActive = true;
+  // PC-Daten zuerst auf Server pushen
+  fetch('/api/data', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getPINHeader(), 'X-Device': _deviceName },
+    body: JSON.stringify({
+      customers: state.customers, reservations: state.reservations,
+      fields: state.fields, workLogs: state.workLogs, harvests: state.harvests,
+      hallSlots: state.hallSlots, device: _deviceName
+    }),
+    signal: AbortSignal.timeout(5000)
+  }).then(() => {
+    // Sync vom Handy anfordern
+    return fetch('/api/request-sync', { method: 'POST', headers: getPINHeader(), signal: AbortSignal.timeout(3000) });
+  }).then(() => {
+    document.getElementById('syncWaitText').textContent = 'Warte auf Antwort vom Handy...';
+    waitForPhoneData();
+  }).catch(() => {
+    document.getElementById('syncWaitText').textContent = 'Server nicht erreichbar';
+    document.getElementById('syncWaitIcon').innerHTML = '&#10060;';
+    _syncWaitActive = false;
+  });
+}
+
+function waitForPhoneData() {
+  if (!_syncWaitActive) return;
+  fetch('/api/pending-sync', { headers: getPINHeader(), signal: AbortSignal.timeout(3000) })
+    .then(r => r.json())
+    .then(data => {
+      if (!_syncWaitActive) return;
+      if (data.device && data.device !== _deviceName) {
+        _syncWaitActive = false;
+        closeModal();
+        showSyncRequestModal(data.device, data.data);
+        return;
+      }
+      setTimeout(() => waitForPhoneData(), 1500);
+    })
+    .catch(() => {
+      if (!_syncWaitActive) return;
+      setTimeout(() => waitForPhoneData(), 1500);
+    });
 }
 
 // PC: Daten vom Server laden (nach Bestätigung)

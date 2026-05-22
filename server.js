@@ -45,6 +45,8 @@ let dataVersion = 0;
 
 // Pending sync requests: { device, data, timestamp }
 let pendingSync = null;
+// PC fordert Handy-Daten an
+let syncRequested = false;
 
 function loadData() {
   try {
@@ -193,6 +195,12 @@ const server = http.createServer((req, res) => {
               hallSlots: newData.hallSlots || {}
             };
             saveData();
+            if (syncRequested) {
+              // Bei angefordertem Sync: als pending markieren, damit PC es sieht
+              pendingSync = { device: device, data: JSON.parse(JSON.stringify(appData)), timestamp: Date.now() };
+              syncRequested = false;
+              console.log(`Handy-Daten von ${device} als pending für PC gespeichert`);
+            }
             console.log(`Handy-Daten von ${device} als Master übernommen (${custCount} Kunden)`);
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ ok: true, version: dataVersion, data: appData }));
@@ -296,6 +304,30 @@ const server = http.createServer((req, res) => {
   // API: PC lehnt Sync ab
   if (url === '/api/sync-decline' && req.method === 'POST') {
     pendingSync = null;
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true }));
+    return;
+  }
+
+  // API: PC fordert Handy-Daten an
+  if (url === '/api/request-sync' && req.method === 'POST') {
+    syncRequested = true;
+    console.log('PC fordert Handy-Daten an');
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ ok: true }));
+    return;
+  }
+
+  // API: Handy prüft ob Sync angefordert wurde
+  if (url === '/api/sync-request' && req.method === 'GET') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ requested: syncRequested }));
+    return;
+  }
+
+  // API: Handy bestätigt Sync-Anfrage (nach Daten-Push)
+  if (url === '/api/sync-request' && req.method === 'DELETE') {
+    syncRequested = false;
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ ok: true }));
     return;

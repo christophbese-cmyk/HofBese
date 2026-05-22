@@ -1155,7 +1155,7 @@ function updateOfflineBadge() {
   const badge = document.getElementById('offlineBadge');
   if (badge) badge.style.display = _syncEnabled ? 'none' : 'inline';
   const syncBtn = document.getElementById('syncRequestBtn');
-  if (syncBtn) syncBtn.style.display = (_syncRequestPending && _syncEnabled) ? 'inline' : 'none';
+  if (syncBtn) syncBtn.style.display = _syncRequestPending ? 'inline' : 'none';
 }
 
 function renderBackup() {

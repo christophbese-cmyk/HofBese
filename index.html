@@ -1446,6 +1446,8 @@ function renderSidebar() {
 
 // Sync-Button: Fordert Handy-Daten an und wartet
 function doSyncFromHandy() {
+  if (_syncWaitActive) { _syncWaitActive = false; closeModal(); }
+  if (window.innerWidth < 768) { showToast('Nur auf dem PC'); return; }
   if (_reconnectTimer) { clearInterval(_reconnectTimer); _reconnectTimer = null; }
   showModal(`
     <h3>Daten vom Handy holen?</h3>

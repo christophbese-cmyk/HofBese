@@ -1,4 +1,4 @@
-const CACHE = 'heubestellung-v10';
+const CACHE = 'heubestellung-v11';
 
 self.addEventListener('install', e => {
   const localAssets = ['./', './index.html', './manifest.json', './qrcode.min.js', './icons/icon-192.png', './icons/icon-512.png'];

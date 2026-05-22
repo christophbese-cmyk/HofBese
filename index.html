@@ -744,7 +744,6 @@ let _syncRequestPending = false;
 function startSyncRequestPolling() {
   if (_syncRequestTimer) return;
   _syncRequestTimer = setInterval(() => {
-    if (!_syncEnabled) return;
     const isMobile = window.innerWidth < 768;
     if (!isMobile) return;
     if (_syncRequestPending) return;
@@ -2686,6 +2685,7 @@ if (state.customers.length === 0 && state.reservations.length === 0) {
 }
 if (state.fields.length === 0 && DEFAULT_FIELDS.length > 0) { state.fields = JSON.parse(JSON.stringify(DEFAULT_FIELDS)); saveData(); }
 checkPINStatus();
+startSyncRequestPolling();
 loadBackupHandle().then(h => { backupHandle = h; renderSidebar(); });
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(()=>{});

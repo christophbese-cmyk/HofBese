@@ -582,7 +582,7 @@ function pinSubmit() {
   }
 
   // Kein lokaler PIN → Server versuchen
-  fetch(api('/api/data', { headers: { 'X-PIN': _pinBuffer }, signal: AbortSignal.timeout(3000) })
+  fetchApi('/api/data', { headers: { 'X-PIN': _pinBuffer }, signal: AbortSignal.timeout(3000) })
     .then(r => {
       if (r.status === 401) throw new Error('wrong');
       return r.json();
@@ -628,7 +628,7 @@ function checkPINStatus() {
   }
 
   // Kein lokaler PIN → Server prüfen (optional)
-  fetch(api('/api/pin-status', { signal: AbortSignal.timeout(2000) })
+  fetchApi('/api/pin-status', { signal: AbortSignal.timeout(2000) })
     .then(r => r.json())
     .then(data => {
       if (data.setup) {
@@ -654,6 +654,7 @@ function checkPINStatus() {
 let _serverBaseUrl = localStorage.getItem('heubestellung_server_url') || '';
 function apiUrl(path) { return _serverBaseUrl ? _serverBaseUrl + path : path; }
 function api(path) { return _serverBaseUrl + path; }
+function fetchApi(path, opts) { return fetch(api(path), opts); }
 function setServerUrl() {
   const el = document.getElementById('serverUrlInput');
   if (!el) return;
@@ -692,7 +693,7 @@ function tryConnectServer() {
 
   if (isMobile) {
     // Handy: Nur Server-Erreichbarkeit prüfen, kein automatischer Daten-Push
-    fetch(api('/api/pin-status', { signal: AbortSignal.timeout(5000) })
+    fetchApi('/api/pin-status', { signal: AbortSignal.timeout(5000) })
     .then(r => {
       if (!r.ok) throw new Error();
       return r.json();
@@ -714,7 +715,7 @@ function tryConnectServer() {
     });
   } else {
     // PC: lokalen Server prüfen
-    fetch(api('/api/pin-status', { signal: AbortSignal.timeout(3000) })
+    fetchApi('/api/pin-status', { signal: AbortSignal.timeout(3000) })
     .then(r => {
       if (!r.ok) throw new Error();
       return r.json();
@@ -747,7 +748,7 @@ function startSyncRequestPolling() {
     const isMobile = window.innerWidth < 768;
     if (!isMobile) return;
     if (_syncRequestPending) return;
-    fetch(api('/api/sync-request', { headers: getPINHeader(), signal: AbortSignal.timeout(3000) })
+    fetchApi('/api/sync-request', { headers: getPINHeader(), signal: AbortSignal.timeout(3000) })
       .then(r => r.json())
       .then(data => {
         if (data.requested && !_syncRequestPending) {
@@ -776,7 +777,7 @@ function onSyncRequestTap() {
 }
 function pushDataToServer() {
   showToast('Sende Daten an PC...');
-  fetch(api('/api/data', {
+  fetchApi('/api/data', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getPINHeader(), 'X-Device': _deviceName },
     body: JSON.stringify({
@@ -788,7 +789,7 @@ function pushDataToServer() {
   })
   .then(r => r.json())
   .then(() => {
-    fetch(api('/api/sync-request', { method: 'DELETE', headers: getPINHeader() }).catch(()=>{});
+    fetchApi('/api/sync-request', { method: 'DELETE', headers: getPINHeader() }).catch(()=>{});
     _syncRequestPending = false;
     updateOfflineBadge();
     renderAll();
@@ -857,7 +858,7 @@ function applyFirstTimeSync(mode) {
   _syncChoice = mode;
   closeModal();
 
-  fetch(api('/api/data', { headers: getPINHeader(), signal: AbortSignal.timeout(5000) })
+  fetchApi('/api/data', { headers: getPINHeader(), signal: AbortSignal.timeout(5000) })
     .then(r => {
       if (!r.ok) throw new Error('Sync-Fehler ' + r.status);
       return r.json();
@@ -935,7 +936,7 @@ function saveData() {
 function syncToServer() {
   if (_syncing) return Promise.reject();
   _syncing = true;
-  return fetch(api('/api/data', {
+  return fetchApi('/api/data', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getPINHeader(), 'X-Device': _deviceName },
     body: JSON.stringify({
@@ -962,7 +963,7 @@ function syncToServer() {
 
 // Sync vom Server (Server → lokal)
 function syncFromServer() {
-  fetch(api('/api/data', { headers: getPINHeader(), signal: AbortSignal.timeout(5000) })
+  fetchApi('/api/data', { headers: getPINHeader(), signal: AbortSignal.timeout(5000) })
     .then(r => {
       if (!r.ok) throw new Error('Sync-Fehler ' + r.status);
       return r.json();
@@ -1121,7 +1122,7 @@ function startReconnect() {
   if (_reconnectTimer) return;
   updateOfflineBadge();
   _reconnectTimer = setInterval(() => {
-    fetch(api('/api/pin-status', { headers: getPINHeader(), signal: AbortSignal.timeout(3000) })
+    fetchApi('/api/pin-status', { headers: getPINHeader(), signal: AbortSignal.timeout(3000) })
       .then(r => r.json())
       .then(() => {
         clearInterval(_reconnectTimer);
@@ -1246,7 +1247,7 @@ function renderBackup() {
 
   // QR-Code generieren
   setTimeout(() => {
-    fetch(api('/api/ip')
+    fetchApi('/api/ip')
       .then(r => r.json())
       .then(data => {
         const url = `http://${data.ip}:${data.port}`;
@@ -1460,7 +1461,7 @@ function doSyncFromHandy() {
   `);
   _syncWaitActive = true;
   // PC-Daten zuerst auf Server pushen
-  fetch(api('/api/data', {
+  fetchApi('/api/data', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getPINHeader(), 'X-Device': _deviceName },
     body: JSON.stringify({
@@ -1471,7 +1472,7 @@ function doSyncFromHandy() {
     signal: AbortSignal.timeout(5000)
   }).then(() => {
     // Sync vom Handy anfordern
-    return fetch(api('/api/request-sync', { method: 'POST', headers: getPINHeader(), signal: AbortSignal.timeout(3000) });
+    return fetchApi('/api/request-sync', { method: 'POST', headers: getPINHeader(), signal: AbortSignal.timeout(3000) });
   }).then(() => {
     document.getElementById('syncWaitText').textContent = 'Warte auf Antwort vom Handy...';
     waitForPhoneData();
@@ -1484,7 +1485,7 @@ function doSyncFromHandy() {
 
 function waitForPhoneData() {
   if (!_syncWaitActive) return;
-  fetch(api('/api/pending-sync', { headers: getPINHeader(), signal: AbortSignal.timeout(3000) })
+  fetchApi('/api/pending-sync', { headers: getPINHeader(), signal: AbortSignal.timeout(3000) })
     .then(r => r.json())
     .then(data => {
       if (!_syncWaitActive) return;
@@ -1506,7 +1507,7 @@ function waitForPhoneData() {
 function confirmSyncFromPhone() {
   closeModal();
   showToast('Hole Daten vom Server...');
-  fetch(api('/api/data', { headers: getPINHeader(), signal: AbortSignal.timeout(5000) })
+  fetchApi('/api/data', { headers: getPINHeader(), signal: AbortSignal.timeout(5000) })
     .then(r => {
       if (r.status === 401) { showToast('PIN falsch'); throw new Error('PIN falsch'); }
       if (!r.ok) throw new Error('Sync-Fehler ' + r.status);
@@ -1586,7 +1587,7 @@ function acceptSync(mode) {
   _syncChoice = mode;
   closeModal();
   _showingSyncModal = false;
-  fetch(api('/api/sync-accept', {
+  fetchApi('/api/sync-accept', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ mode })
@@ -1608,7 +1609,7 @@ function acceptSync(mode) {
 function declineSync() {
   closeModal();
   _showingSyncModal = false;
-  fetch(api('/api/sync-decline', { method: 'POST' }).catch(() => {});
+  fetchApi('/api/sync-decline', { method: 'POST' }).catch(() => {});
   showToast('Sync abgelehnt');
 }
 
@@ -1625,7 +1626,7 @@ function loadConnectionInfo() {
   if (_connInfoTimer) clearInterval(_connInfoTimer);
   function fetchInfo() {
     if (!_connInfoVisible) { if (_connInfoTimer) clearInterval(_connInfoTimer); return; }
-    fetch(api('/api/info', { signal: AbortSignal.timeout(3000) })
+    fetchApi('/api/info', { signal: AbortSignal.timeout(3000) })
       .then(r => r.json())
       .then(info => {
         const el = document.getElementById('conn-details');
@@ -2345,7 +2346,7 @@ function closeModal() {
   document.getElementById('modalOverlay').classList.remove('active');
   if (_showingSyncModal) {
     _showingSyncModal = false;
-    fetch(api('/api/sync-decline', { method: 'POST' }).catch(() => {});
+    fetchApi('/api/sync-decline', { method: 'POST' }).catch(() => {});
   }
 }
 

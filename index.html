@@ -1,0 +1,2569 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="HofBese">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>HofBese</title>
+<style>
+:root {
+  --primary: #1B5E20;
+  --primary-light: #2E7D32;
+  --bg: #f0f2f5;
+  --card: #fff;
+  --text: #222;
+  --text-light: #666;
+  --border: #ddd;
+  --shadow: 0 2px 8px rgba(0,0,0,0.1);
+  --radius: 10px;
+  --color-schnitt2: #228B22;
+  --color-stroh: #DAA520;
+  --color-naturschutz: #6B8E23;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.5;
+  -webkit-tap-highlight-color: transparent;
+}
+#app {
+  max-width: 1200px; margin: 0 auto; min-height: 100dvh;
+  display: flex; flex-direction: column;
+}
+header {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: #fff; padding: 12px 18px; display: flex; align-items: center;
+  gap: 12px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+header h1 { font-size: 1.15rem; font-weight: 700; flex: 1; }
+.app-logo { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0; margin-right: 8px; border: 2px solid rgba(255,255,255,0.4); }
+header .back-btn {
+  background: rgba(255,255,255,0.2); border: none; color: #fff;
+  font-size: 1.2rem; padding: 6px 14px; border-radius: 6px; cursor: pointer;
+  display: none; font-weight: 700;
+}
+header .back-btn:hover { background: rgba(255,255,255,0.3); }
+header .save-btn {
+  background: rgba(255,255,255,0.2); border: none; color: #fff;
+  padding: 6px 10px; border-radius: 6px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+header .save-btn:hover { background: rgba(255,255,255,0.3); }
+
+/* ---- Tabs ---- */
+.tab-bar {
+  display: flex; flex-direction: column; gap: 6px; margin-bottom: 0; flex-shrink: 0;
+}
+.tab-btn {
+  width: 44px; height: 44px; padding: 0; border: none; border-radius: 8px;
+  background: #e8e8e8; cursor: pointer; transition: all 0.15s; color: var(--text-light);
+  display: flex; align-items: center; justify-content: center;
+}
+.tab-btn:hover { color: var(--text); background: #ddd; }
+.tab-btn.active {
+  background: var(--primary); color: #fff; font-weight: 700; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.tab-btn.active:hover { background: var(--primary-light); }
+.tab-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ---- Sidebar ---- */
+#sidebar {
+  display: flex; flex-direction: row;
+  background: var(--card); border-bottom: 1px solid var(--border);
+  padding: 10px; overflow: hidden; gap: 10px;
+}
+.sidebar-tabs { flex-shrink: 0; }
+.sidebar-content { flex: 1; min-width: 0; overflow-y: auto; }
+#sidebar .sb-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;
+}
+#sidebar .sb-header h2 { font-size: 1.1rem; font-weight: 700; }
+#sb-search {
+  width: 100%; padding: 9px 12px; border: 2px solid var(--border); border-radius: 8px;
+  font-size: 0.9rem; margin-bottom: 10px;
+}
+#sb-search:focus { outline: none; border-color: var(--primary); }
+.sb-customer {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  border-radius: 8px; cursor: pointer; margin-bottom: 2px;
+  transition: background 0.12s;
+}
+.sb-customer:hover { background: #f0f2f5; }
+.sb-customer.active { background: #e8f5e9; font-weight: 600; }
+.sb-customer .name { flex: 1; font-size: 0.92rem; }
+.sb-customer .badge { font-size: 0.72rem; color: var(--text-light); white-space: nowrap; }
+.sb-customer .badge span { font-weight: 600; color: var(--text); }
+
+/* ---- Main Content ---- */
+#mainContent {
+  padding: 16px; overflow-y: auto; min-height: 200px;
+}
+.empty-detail {
+  text-align: center; padding: 60px 20px; color: var(--text-light);
+}
+.empty-detail p { font-size: 1.1rem; margin-bottom: 8px; }
+
+/* ---- Common ---- */
+.card {
+  background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 16px; margin-bottom: 12px;
+}
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: 6px; border: none; border-radius: 8px; cursor: pointer;
+  font-size: 0.88rem; font-weight: 600; padding: 9px 16px;
+  transition: background 0.15s, transform 0.1s;
+}
+.btn:active { transform: scale(0.96); }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-light); }
+.btn-danger { background: #d32f2f; color: #fff; }
+.btn-danger:hover { background: #b71c1c; }
+.btn-sm { padding: 5px 10px; font-size: 0.76rem; }
+.btn-icon {
+  width: 38px; height: 38px; border-radius: 50%; padding: 0;
+  font-size: 1.2rem; font-weight: 700;
+}
+.btn-deliver { background: var(--primary); color: #fff; }
+.btn-deliver-minus { background: #ff8a65; color: #fff; }
+
+/* ---- Customer Detail ---- */
+.customer-header { margin-bottom: 16px; }
+.customer-header h2 { font-size: 1.35rem; margin-bottom: 8px; }
+.customer-header .actions-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.summary-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; margin-bottom: 20px; }
+.summary-card { background: var(--card); border-radius: 8px; padding: 12px; text-align: center; box-shadow: var(--shadow); }
+.summary-card .num { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+.summary-card .label { font-size: 0.78rem; color: var(--text-light); }
+
+/* ---- Reservation Groups ---- */
+.year-section { margin-bottom: 24px; }
+.year-header {
+  font-size: 1.1rem; font-weight: 700; padding: 10px 14px; margin-bottom: 8px;
+  background: #e0e0e0; border-radius: 8px; color: var(--text);
+}
+.year-header .vorjahr { font-weight: 400; font-size: 0.82rem; color: var(--text-light); }
+.reservation-group { margin-bottom: 12px; }
+.group-header {
+  font-weight: 700; font-size: 1.05rem; padding: 9px 14px;
+  border-radius: 8px 8px 0 0; display: flex; justify-content: space-between;
+  align-items: center; margin-bottom: 2px;
+}
+.group-header.schnitt1 { background: #e8f5e9; border-left: 4px solid var(--primary); }
+.group-header.schnitt2 { background: #e8f5e9; border-left: 4px solid var(--color-schnitt2); color: var(--color-schnitt2); }
+.group-header.stroh { background: #fff8e1; border-left: 4px solid var(--color-stroh); color: #b8860b; }
+.group-header.naturschutz { background: #f1f8e9; border-left: 4px solid var(--color-naturschutz); color: var(--color-naturschutz); }
+.reservation-row {
+  display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+  background: var(--card); border-bottom: 1px solid #f0f0f0; flex-wrap: wrap;
+}
+.reservation-row:last-child { border-radius: 0 0 8px 8px; }
+.size-dot {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  border: 2px solid rgba(0,0,0,0.08);
+}
+.reservation-row .info { flex: 1; min-width: 130px; }
+.reservation-row .info .size-label { font-weight: 600; font-size: 0.92rem; }
+.reservation-row .info .counts { font-size: 0.82rem; color: var(--text-light); margin-top: 2px; }
+.reservation-row .info .counts strong { color: var(--text); }
+.reservation-row .delivery-actions { display: flex; gap: 5px; align-items: center; }
+.reservation-row .delivery-actions .count-badge {
+  font-weight: 700; font-size: 1.1rem; padding: 6px 10px;
+  background: #e8f5e9; border-radius: 50%; min-width: 44px; text-align: center;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 44px; height: 44px;
+}
+.reservation-row .row-actions { display: flex; gap: 4px; }
+.reservation-row .row-actions .btn { padding: 4px 7px; font-size: 0.68rem; }
+.add-res-btn { margin-top: 3px; width: 100%; padding: 7px; background: #f5f5f5; border: 2px dashed #ccc; border-radius: 0 0 8px 8px; color: var(--text-light); font-size: 0.82rem; cursor: pointer; }
+.add-res-btn:hover { background: #eee; border-color: #999; }
+
+/* ---- Lagerhalle ---- */
+.halle-container { max-width: 100%; margin: 0 auto; padding: 0 4px; }
+.halle-layout { display: flex; flex-direction: column; gap: 6px; }
+.halle-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; min-width: 0; }
+.halle-box { background: var(--card); border-radius: 6px; box-shadow: var(--shadow); padding: 4px; min-width: 0; max-width: 100%; overflow: hidden; box-sizing: border-box; }
+.halle-box-header { font-weight: 700; font-size: 0.7rem; padding: 3px 4px; margin-bottom: 3px; background: #e8f5e9; border-radius: 4px; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.halle-futtertisch { background: #fff3e0; border: 2px solid #ff9800; border-radius: 6px; padding: 10px; text-align: center; font-weight: 700; font-size: 0.85rem; color: #e65100; margin: 2px 0; cursor: pointer; transition: all 0.15s; }
+.halle-futtertisch:hover { background: #ffe0b2; border-color: #f57c00; }
+.halle-futtertisch.has-rolls { background: #e8f5e9; border-color: var(--primary); color: #1B5E20; }
+.slot-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; overflow: hidden; min-width: 0; }
+.slot-cell { background: #f5f5f5; border: 2px solid #e0e0e0; border-radius: 3px; min-height: 38px; max-height: 38px; min-width: 0; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; padding: 2px; box-sizing: border-box; overflow: hidden; }
+.slot-cell:hover { border-color: var(--primary); background: #e8f5e9; }
+.slot-cell.has-rolls { background: #f1f8e9; }
+.slot-cell .roll-count { font-size: 1.2rem; font-weight: 700; color: var(--primary); line-height: 1; }
+.halle-stats { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
+.halle-stat { text-align: center; }
+.halle-stat .num { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
+.halle-stat .label { font-size: 0.7rem; color: var(--text-light); }
+
+@media (max-width: 900px) {
+  .halle-row { grid-template-columns: repeat(5, 1fr); min-width: 0; }
+  .halle-box { min-width: 0; }
+  .halle-box-header { font-size: 0.6rem; }
+  .slot-cell { min-height: 30px; max-height: 30px; }
+  .slot-cell .roll-count { font-size: 0.9rem; }
+}
+@media (max-width: 600px) {
+  .halle-row { grid-template-columns: repeat(5, 1fr); min-width: 0; }
+  .halle-box { min-width: 0; padding: 3px; }
+  .halle-box-header { font-size: 0.55rem; padding: 2px 2px; }
+  .slot-grid { gap: 1px; }
+  .slot-cell { min-height: 26px; max-height: 26px; border-radius: 2px; }
+  .slot-cell .roll-count { font-size: 0.75rem; }
+  .halle-futtertisch { font-size: 0.7rem; padding: 8px; }
+}
+
+/* ---- Wizard ---- */
+.wiz-step { font-size: 0.78rem; color: var(--text-light); margin-bottom: 16px; text-align: center; }
+.wiz-options { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.wiz-option {
+  display: flex; align-items: center; gap: 10px; padding: 14px 16px;
+  border: 2px solid var(--border); border-radius: 10px; background: var(--card);
+  font-size: 1rem; font-weight: 600; cursor: pointer;
+  transition: all 0.15s; text-align: left; width: 100%;
+}
+.wiz-option:hover { border-color: var(--primary); background: #f1f8e9; }
+.wiz-option.selected { border-color: var(--primary); background: #e8f5e9; }
+.wiz-option .dot {
+  width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+  border: 2px solid rgba(0,0,0,0.1);
+}
+.wiz-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;
+}
+.wiz-grid .wiz-option { justify-content: center; text-align: center; }
+
+/* ---- Modal ---- */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+  z-index: 1000; justify-content: center; align-items: center; padding: 16px;
+}
+.modal-overlay.active { display: flex; }
+.modal {
+  background: var(--card); border-radius: 12px; width: 100%; max-width: 420px;
+  max-height: 90vh; overflow-y: auto; padding: 24px; box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+}
+.modal h3 { font-size: 1.2rem; margin-bottom: 8px; }
+.form-group { margin-bottom: 14px; }
+.form-group label { display: block; font-weight: 600; font-size: 0.88rem; margin-bottom: 4px; }
+.form-group input, .form-group select {
+  width: 100%; padding: 10px 12px; border: 2px solid var(--border); border-radius: 8px;
+  font-size: 1rem; background: #fff;
+}
+.form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary); }
+.form-row { display: flex; gap: 12px; }
+.form-row .form-group { flex: 1; }
+.modal .btn-row { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+.modal .btn-row .btn { flex: 1; }
+
+/* ---- Toast ---- */
+.toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: #333; color: #fff; padding: 12px 24px; border-radius: 10px;
+  font-size: 0.88rem; z-index: 2000; opacity: 0; transition: opacity 0.3s;
+  pointer-events: none; white-space: nowrap;
+}
+.toast.show { opacity: 1; }
+
+/* ============ DESKTOP ============ */
+@media (min-width: 768px) {
+  #app {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto 1fr;
+    height: 100dvh;
+  }
+  header { grid-column: 1 / -1; }
+  header .back-btn { display: none !important; }
+  #sidebar {
+    grid-column: 1; grid-row: 2;
+    border-right: 1px solid var(--border);
+    border-bottom: none; padding: 10px;
+    flex-direction: column;
+    width: 56px;
+  }
+  .sidebar-tabs { flex-shrink: 0; }
+  .sidebar-content { display: none; }
+  #mainContent {
+    grid-column: 2; grid-row: 2; padding: 20px; overflow-y: auto;
+  }
+  .sb-customer { padding: 8px 10px; }
+  .btn-icon { width: 36px; height: 36px; font-size: 1.1rem; }
+}
+
+/* ============ MOBILE ============ */
+@media (max-width: 767px) {
+  #app {
+    display: flex !important;
+    flex-direction: column;
+    height: 100dvh;
+    width: 100%;
+    max-width: 100%;
+  }
+  header { flex-shrink: 0; width: 100%; }
+  #sidebar {
+    display: flex !important;
+    flex-direction: row;
+    width: 100%;
+    padding: 8px;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+    border-right: none;
+    box-sizing: border-box;
+  }
+  .sidebar-tabs { display: flex; gap: 8px; }
+  .tab-bar { flex-direction: row !important; gap: 8px !important; margin-bottom: 0 !important; }
+  .tab-btn { width: 44px; height: 44px; flex-shrink: 0; }
+  .sidebar-content { display: none; }
+  #mainContent {
+    display: block !important;
+    flex: 1;
+    width: 100%;
+    box-sizing: border-box;
+    overflow-y: auto;
+    padding: 12px;
+    padding-bottom: 80px;
+  }
+  header { padding: 10px 14px; }
+  header h1 { font-size: 1rem; }
+  .reservation-row { padding: 10px 10px; }
+  .reservation-row .info { min-width: 100px; }
+  .btn-icon { width: 44px; height: 44px; font-size: 1.3rem; }
+  .modal { padding: 18px; }
+  .lager-table th, .lager-table td { padding: 6px 8px; font-size: 0.78rem; }
+  #map { min-height: 45vh; }
+  .map-container { min-height: 45vh; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <button class="back-btn" id="backBtn" onclick="showCustomerList()">&#8592;</button>
+    <img src="icons/icon-192.png" class="app-logo" alt="Logo">
+    <h1 id="appTitle">HofBese</h1>
+    <span id="offlineBadge" style="display:none;background:#ff8a65;color:#fff;font-size:0.65rem;font-weight:700;padding:3px 8px;border-radius:4px;">OFFLINE</span>
+    <button class="save-btn" onclick="saveData();showToast('Daten gespeichert')" title="Speichern"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button>
+    <button class="save-btn" onclick="importData()" title="Import"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+    <button class="save-btn" id="installBtn" onclick="installPWA()" title="App installieren"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+  </header>
+  <div id="sidebar"></div>
+  <div id="mainContent"></div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div id="pinOverlay" style="display:flex;position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1B5E20,#2e7d32);z-index:10000;justify-content:center;align-items:center;flex-direction:column;">
+  <div style="background:#fff;border-radius:16px;padding:32px;max-width:340px;width:90%;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.3);">
+    <div style="font-size:2.5rem;margin-bottom:8px;">🔒</div>
+    <h2 id="pinTitle" style="color:#1B5E20;margin-bottom:4px;">PIN eingeben</h2>
+    <p id="pinSubtitle" style="color:#666;font-size:0.9rem;margin-bottom:20px;">4-stelligen PIN eingeben</p>
+    <div id="pinDots" style="display:flex;justify-content:center;gap:12px;margin-bottom:20px;">
+      <div class="pin-dot" style="width:16px;height:16px;border-radius:50%;border:2px solid #1B5E20;transition:all 0.2s;"></div>
+      <div class="pin-dot" style="width:16px;height:16px;border-radius:50%;border:2px solid #1B5E20;transition:all 0.2s;"></div>
+      <div class="pin-dot" style="width:16px;height:16px;border-radius:50%;border:2px solid #1B5E20;transition:all 0.2s;"></div>
+      <div class="pin-dot" style="width:16px;height:16px;border-radius:50%;border:2px solid #1B5E20;transition:all 0.2s;"></div>
+    </div>
+    <div id="pinError" style="color:#d32f2f;font-size:0.85rem;margin-bottom:12px;display:none;"></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:240px;margin:0 auto;">
+      <button class="pin-btn" onclick="pinInput('1')">1</button>
+      <button class="pin-btn" onclick="pinInput('2')">2</button>
+      <button class="pin-btn" onclick="pinInput('3')">3</button>
+      <button class="pin-btn" onclick="pinInput('4')">4</button>
+      <button class="pin-btn" onclick="pinInput('5')">5</button>
+      <button class="pin-btn" onclick="pinInput('6')">6</button>
+      <button class="pin-btn" onclick="pinInput('7')">7</button>
+      <button class="pin-btn" onclick="pinInput('8')">8</button>
+      <button class="pin-btn" onclick="pinInput('9')">9</button>
+      <button class="pin-btn" onclick="pinClear()" style="font-size:0.8rem;">⌫</button>
+      <button class="pin-btn" onclick="pinInput('0')">0</button>
+      <button class="pin-btn" onclick="pinSubmit()" style="font-size:0.8rem;">✓</button>
+    </div>
+  </div>
+</div>
+
+<style>
+.pin-btn { width:64px;height:64px;border-radius:50%;border:2px solid #1B5E20;background:#fff;font-size:1.3rem;font-weight:600;cursor:pointer;transition:all 0.15s;color:#1B5E20; }
+.pin-btn:hover { background:#1B5E20;color:#fff; }
+.pin-btn:active { transform:scale(0.95); }
+.pin-dot.filled { background:#1B5E20; }
+.pin-dot.error { border-color:#d32f2f;animation:pinShake 0.4s; }
+@keyframes pinShake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+</style>
+
+<input type="file" id="importFileInput" accept=".json" style="display:none" onchange="handleImport(event)">
+
+<script src="qrcode.min.js"></script>
+<script>
+// ============ SERVICE WORKER (optional, nur wenn online) ============
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(()=>{});
+  });
+}
+// ============ CONSTANTS ============
+const CURRENT_YEAR = new Date().getFullYear();
+const SIZES = [0.9, 1.0, 1.1, 1.2, 1.3, 1.4, 1.5, 1.6];
+const TYPES = [
+  { id: 'schnitt1', label: '1. Schnitt' },
+  { id: 'schnitt2', label: '2. Schnitt' },
+  { id: 'stroh', label: 'Stroh' },
+  { id: 'naturschutz', label: 'Naturschutz' }
+];
+const SIZE_COLORS = {
+  0.9: '#40E0D0', 1.0: '#FFB6C1', 1.1: '#1E90FF', 1.2: '#ADD8E6',
+  1.3: '#DDA0DD', 1.4: '#90EE90', 1.5: '#FF7F7F', 1.6: '#FFA500'
+};
+const TYPE_COLORS = { schnitt1: null, schnitt2: '#228B22', stroh: '#DAA520', naturschutz: '#6B8E23' };
+
+// ============ STATE ============
+let state = { customers: [], reservations: [], currentTab: 'kunden', currentCustomerId: null };
+let _dataVersion = parseInt(localStorage.getItem('heubestellung_export_ver') || '0', 10);
+let _isServer = false;
+let _syncRequested = false;
+
+// ============ WIZARD STATE ============
+let wiz = { step: 1, name: '', location: '', type: null, size: null, quantity: '', year: CURRENT_YEAR };
+
+// ============ PIN (Schutz gegen Fremdnutzung) ============
+let _pinBuffer = '';
+let _pinMode = 'check';
+let _pinSetupTemp = '';
+let _appPIN = sessionStorage.getItem('heubestellung_pin') || '';
+let _pinHash = localStorage.getItem('heubestellung_pin_hash') || '';
+
+function hashPIN(pin) {
+  let hash = 0;
+  for (let i = 0; i < pin.length; i++) {
+    const char = pin.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  return 'h' + Math.abs(hash).toString(36);
+}
+
+function showPINScreen(mode = 'check') {
+  _pinMode = mode;
+  _pinBuffer = '';
+  const overlay = document.getElementById('pinOverlay');
+  const title = document.getElementById('pinTitle');
+  const subtitle = document.getElementById('pinSubtitle');
+  const error = document.getElementById('pinError');
+  error.style.display = 'none';
+  if (mode === 'setup') {
+    title.textContent = 'PIN einrichten';
+    subtitle.textContent = 'Wähle einen 4-stelligen PIN';
+  } else if (mode === 'confirm') {
+    title.textContent = 'PIN bestätigen';
+    subtitle.textContent = 'PIN wiederholen';
+  } else {
+    title.textContent = 'PIN eingeben';
+    subtitle.textContent = '4-stelligen PIN eingeben';
+  }
+  updatePINDots();
+  overlay.style.display = 'flex';
+}
+
+function hidePINScreen() {
+  document.getElementById('pinOverlay').style.display = 'none';
+}
+
+function updatePINDots() {
+  const dots = document.querySelectorAll('.pin-dot');
+  dots.forEach((dot, i) => {
+    dot.classList.toggle('filled', i < _pinBuffer.length);
+    dot.classList.remove('error');
+  });
+}
+
+function pinInput(digit) {
+  if (_pinBuffer.length >= 4) return;
+  _pinBuffer += digit;
+  updatePINDots();
+  if (_pinBuffer.length === 4) {
+    setTimeout(() => pinSubmit(), 200);
+  }
+}
+
+function pinClear() {
+  _pinBuffer = '';
+  updatePINDots();
+  document.getElementById('pinError').style.display = 'none';
+}
+
+function pinSubmit() {
+  if (_pinBuffer.length !== 4) return;
+  const error = document.getElementById('pinError');
+
+  if (_pinMode === 'setup') {
+    _pinSetupTemp = _pinBuffer;
+    _pinBuffer = '';
+    _pinMode = 'confirm';
+    document.getElementById('pinTitle').textContent = 'PIN bestätigen';
+    document.getElementById('pinSubtitle').textContent = 'PIN wiederholen';
+    updatePINDots();
+    return;
+  }
+
+  if (_pinMode === 'confirm') {
+    if (_pinBuffer !== _pinSetupTemp) {
+      error.textContent = 'PINs stimmen nicht überein!';
+      error.style.display = 'block';
+      shakeDots();
+      _pinBuffer = '';
+      _pinMode = 'setup';
+      document.getElementById('pinTitle').textContent = 'PIN einrichten';
+      document.getElementById('pinSubtitle').textContent = 'Wähle einen 4-stelligen PIN';
+      updatePINDots();
+      return;
+    }
+    // PIN lokal speichern
+    _pinHash = hashPIN(_pinBuffer);
+    localStorage.setItem('heubestellung_pin_hash', _pinHash);
+    _appPIN = _pinBuffer;
+    sessionStorage.setItem('heubestellung_pin', _appPIN);
+    hidePINScreen();
+    showToast('PIN eingerichtet');
+    tryConnectServer();
+    return;
+  }
+
+  // check mode: erst lokal prüfen
+  if (_pinHash) {
+    if (hashPIN(_pinBuffer) === _pinHash) {
+      _appPIN = _pinBuffer;
+      sessionStorage.setItem('heubestellung_pin', _appPIN);
+      hidePINScreen();
+      renderAll();
+      tryConnectServer();
+      return;
+    } else {
+      error.textContent = 'PIN falsch';
+      error.style.display = 'block';
+      shakeDots();
+      _pinBuffer = '';
+      updatePINDots();
+      return;
+    }
+  }
+
+  // Kein lokaler PIN → Server versuchen
+  fetch('/api/data', { headers: { 'X-PIN': _pinBuffer }, signal: AbortSignal.timeout(3000) })
+    .then(r => {
+      if (r.status === 401) throw new Error('wrong');
+      return r.json();
+    })
+    .then(result => {
+      _appPIN = _pinBuffer;
+      sessionStorage.setItem('heubestellung_pin', _appPIN);
+      _pinHash = hashPIN(_pinBuffer);
+      localStorage.setItem('heubestellung_pin_hash', _pinHash);
+      hidePINScreen();
+      _serverVersion = result.version;
+      applyServerData(result.data);
+      _syncEnabled = true;
+      renderAll();
+      renderSidebar();
+      showToast('Verbunden & sync aktiv');
+    })
+    .catch(() => {
+      // Server nicht erreichbar → lokal ohne PIN starten
+      hidePINScreen();
+      renderAll();
+      renderSidebar();
+      showToast('Offline-Modus – lokale Daten');
+    });
+}
+
+function shakeDots() {
+  const dots = document.querySelectorAll('.pin-dot');
+  dots.forEach(dot => dot.classList.add('error'));
+  setTimeout(() => dots.forEach(dot => dot.classList.remove('error')), 500);
+}
+
+function checkPINStatus() {
+  // Erst lokale Daten laden und anzeigen
+  renderAll();
+  renderSidebar();
+
+  // Prüfen ob lokal ein PIN gesetzt ist
+  if (_pinHash) {
+    showPINScreen('check');
+    return;
+  }
+
+  // Kein lokaler PIN → Server prüfen (optional)
+  fetch('/api/pin-status', { signal: AbortSignal.timeout(2000) })
+    .then(r => r.json())
+    .then(data => {
+      if (data.setup) {
+        showPINScreen('check');
+      } else {
+        showPINScreen('setup');
+      }
+    })
+    .catch(() => {
+      // Server nicht erreichbar
+      if (state.customers.length > 0) {
+        // Lokale Daten vorhanden → direkt starten, PIN nur für Server-Schutz
+        hidePINScreen();
+        showToast('Offline – kein Server-PIN erforderlich');
+        startReconnect();
+      } else {
+        showPINScreen('setup');
+      }
+    });
+}
+
+// ============ SYNC (manuell, mit Abfrage auf PC) ============
+let _syncEnabled = false;
+let _serverVersion = 0;
+let _syncing = false;
+let _deviceName = localStorage.getItem('heubestellung_device') || '';
+if (!_deviceName) {
+  _deviceName = (window.innerWidth < 768 ? 'Handy' : 'PC') + '-' + Math.random().toString(36).slice(2, 6);
+  localStorage.setItem('heubestellung_device', _deviceName);
+}
+let _pendingSyncTimer = null;
+let _showingSyncModal = false;
+let _syncChoice = localStorage.getItem('heubestellung_sync_choice') || '';
+
+// PC pollt automatisch auf pending Sync-Anfragen (nicht mehr needed – Sync per Button)
+function startPendingSyncPolling() {
+  // Deaktiviert – Sync wird manuell per Button ausgelöst
+}
+
+// Versuch Server zu erreichen nach PIN-Eingabe
+function tryConnectServer() {
+  const isMobile = window.innerWidth < 768;
+
+  if (isMobile) {
+    // Handy: Nur Server-Erreichbarkeit prüfen, kein automatischer Daten-Push
+    fetch('/api/pin-status', { signal: AbortSignal.timeout(5000) })
+    .then(r => {
+      if (!r.ok) throw new Error();
+      return r.json();
+    })
+    .then(() => {
+      _syncEnabled = true;
+      renderAll();
+      renderSidebar();
+      showToast('Verbunden – Sync per Button');
+      startReconnect();
+    })
+    .catch(() => {
+      _syncEnabled = false;
+      renderAll();
+      renderSidebar();
+      showToast('Offline-Modus – lokale Daten');
+      startReconnect();
+    });
+  } else {
+    // PC: lokalen Server prüfen
+    fetch('/api/pin-status', { signal: AbortSignal.timeout(3000) })
+    .then(r => {
+      if (!r.ok) throw new Error();
+      return r.json();
+    })
+    .then(() => {
+      _syncEnabled = true;
+      renderAll();
+      renderSidebar();
+      showToast('Server verbunden');
+      startReconnect();
+    })
+    .catch(() => {
+      _syncEnabled = false;
+      renderAll();
+      renderSidebar();
+      showToast('Offline-Modus – lokale Daten');
+      startReconnect();
+    });
+  }
+}
+
+function showFirstTimeSyncModal(serverData) {
+  const localCount = state.customers.length;
+  const serverCount = (serverData.customers || []).length;
+
+  if (localCount === 0 && serverCount > 0) {
+    applyServerData(serverData);
+    saveData();
+    _serverVersion = 0;
+    _syncEnabled = true;
+    renderAll();
+    renderSidebar();
+    showToast('Verbunden & sync aktiv');
+    startReconnect();
+    return;
+  }
+
+  if (serverCount === 0 && localCount > 0) {
+    _syncEnabled = true;
+    renderAll();
+    renderSidebar();
+    showToast('Verbunden – lokale Daten aktiv');
+    return;
+  }
+
+  showModal(`
+    <h3>Server-Verbindung erkannt</h3>
+    <p style="margin-bottom:16px;color:var(--text-light);">Es wurden Daten auf dem Server gefunden. Diese Frage wird nur einmal gestellt.</p>
+    <div style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:0.9rem;">
+        <span>Lokale Daten:</span><strong>${localCount} Kunden</strong>
+      </div>
+      <div style="display:flex;justify-content:space-between;padding:8px 0;font-size:0.9rem;">
+        <span>Server-Daten (Handy):</span><strong>${serverCount} Kunden</strong>
+      </div>
+    </div>
+    <div style="margin-bottom:16px;">
+      <p style="font-weight:600;margin-bottom:8px;">Was möchtest du tun?</p>
+      <div class="wiz-options">
+        <button class="wiz-option" onclick="applyFirstTimeSync('server')" style="justify-content:center;">
+          Handy-Daten übernehmen
+        </button>
+        <button class="wiz-option" onclick="applyFirstTimeSync('merge')" style="justify-content:center;">
+          Zusammenführen
+        </button>
+        <button class="wiz-option" onclick="applyFirstTimeSync('local')" style="justify-content:center;">
+          Lokale Daten behalten
+        </button>
+      </div>
+    </div>
+  `);
+}
+
+function applyFirstTimeSync(mode) {
+  localStorage.setItem('heubestellung_sync_choice', mode);
+  _syncChoice = mode;
+  closeModal();
+
+  fetch('/api/data', { headers: getPINHeader(), signal: AbortSignal.timeout(5000) })
+    .then(r => {
+      if (!r.ok) throw new Error('Sync-Fehler ' + r.status);
+      return r.json();
+    })
+    .then(result => {
+      applySyncChoice(mode, result.data);
+    })
+    .catch(() => {
+      _syncEnabled = false;
+      renderAll();
+      renderSidebar();
+      showToast('Offline-Modus');
+    });
+}
+
+function applySyncChoice(mode, serverData) {
+  if (mode === 'merge') {
+    const customerMap = new Map();
+    state.customers.forEach(c => customerMap.set(c.id, c));
+    (serverData.customers || []).forEach(c => customerMap.set(c.id, c));
+    state.customers = [...customerMap.values()];
+
+    const resMap = new Map();
+    state.reservations.forEach(r => resMap.set(r.id, r));
+    (serverData.reservations || []).forEach(r => resMap.set(r.id, r));
+    state.reservations = [...resMap.values()];
+
+    state.hallSlots = { ...state.hallSlots, ...serverData.hallSlots };
+
+    if (serverData.fields && serverData.fields.length > state.fields.length) {
+      state.fields = serverData.fields;
+    }
+  } else if (mode === 'server') {
+    applyServerData(serverData);
+  }
+  // mode === 'local' → nichts tun, lokale Daten behalten
+
+  saveData();
+  _serverVersion = 0;
+  _syncEnabled = true;
+  renderAll();
+  renderSidebar();
+  showToast('Verbunden & sync aktiv');
+  startReconnect();
+  startPendingSyncPolling();
+}
+
+function loadData() {
+  try {
+    const raw = localStorage.getItem('heubestellung');
+    if (raw) {
+      const d = JSON.parse(raw);
+      state.customers = (d.customers || []).map(c => { if (!c.location) c.location = ''; if (c.deliveryCost === undefined) c.deliveryCost = 0; return c; });
+      state.reservations = (d.reservations || []).map(r => {
+        if (!r.year) r.year = CURRENT_YEAR;
+        if (!r.deliveryLog) r.deliveryLog = [];
+        return r;
+      });
+      state.fields = d.fields || [];
+      state.workLogs = d.workLogs || [];
+      state.harvests = d.harvests || [];
+      state.hallSlots = d.hallSlots || {};
+    }
+  } catch(e) { state.customers = []; state.reservations = []; state.fields = []; state.workLogs = []; state.harvests = []; state.hallSlots = {}; }
+}
+
+function saveData() {
+  localStorage.setItem('heubestellung', JSON.stringify({ customers: state.customers, reservations: state.reservations, fields: state.fields, workLogs: state.workLogs, harvests: state.harvests, hallSlots: state.hallSlots }));
+  _dataVersion++;
+  updateUnsavedBanner();
+  updateOfflineBadge();
+}
+
+// Sync zum Server (lokal → Server) — nur noch manuell per Sync-Button
+function syncToServer() {
+  if (_syncing) return Promise.reject();
+  _syncing = true;
+  return fetch('/api/data', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getPINHeader(), 'X-Device': _deviceName },
+    body: JSON.stringify({
+      customers: state.customers,
+      reservations: state.reservations,
+      fields: state.fields,
+      workLogs: state.workLogs,
+      harvests: state.harvests,
+      hallSlots: state.hallSlots,
+      device: _deviceName
+    }),
+    signal: AbortSignal.timeout(5000)
+  })
+  .then(r => {
+    if (!r.ok) throw new Error('Sync-Fehler ' + r.status);
+    return r.json();
+  })
+  .then(result => {
+    _serverVersion = result.version;
+    _syncing = false;
+  })
+  .catch(e => { _syncing = false; _syncEnabled = false; updateOfflineBadge(); throw e; });
+}
+
+// Sync vom Server (Server → lokal)
+function syncFromServer() {
+  fetch('/api/data', { headers: getPINHeader(), signal: AbortSignal.timeout(5000) })
+    .then(r => {
+      if (!r.ok) throw new Error('Sync-Fehler ' + r.status);
+      return r.json();
+    })
+    .then(result => {
+      _serverVersion = result.version;
+      applyServerData(result.data);
+      _syncEnabled = true;
+      renderAll();
+      renderSidebar();
+    })
+    .catch(() => {
+      _syncEnabled = false;
+      renderAll();
+      renderSidebar();
+    });
+}
+
+function applyServerData(d) {
+  state.customers = (d.customers || []).map(c => { if (!c.location) c.location = ''; if (c.deliveryCost === undefined) c.deliveryCost = 0; return c; });
+  state.reservations = (d.reservations || []).map(r => {
+    if (!r.year) r.year = CURRENT_YEAR;
+    if (!r.deliveryLog) r.deliveryLog = [];
+    return r;
+  });
+  state.fields = d.fields || [];
+  state.workLogs = d.workLogs || [];
+  state.harvests = d.harvests || [];
+  state.hallSlots = d.hallSlots || {};
+}
+
+function getPINHeader() {
+  return _appPIN ? { 'X-PIN': _appPIN } : {};
+}
+
+function needsBackup() { return _dataVersion > parseInt(localStorage.getItem('heubestellung_export_ver') || '0', 10); }
+function backupReminderHtml() {
+  if (window.showDirectoryPicker && backupHandle) return '';
+  return needsBackup()
+    ? '<div style="margin-top:6px;padding:6px 10px;background:#fff3cd;border-radius:6px;font-size:0.72rem;color:#856404;"><b>⏳ Backup ausstehend</b> · <a href="#" onclick="event.preventDefault();exportToBackupFolder()" style="color:#856404;">jetzt exportieren</a></div>'
+    : '<div style="margin-top:6px;font-size:0.7rem;color:var(--text-light);text-align:center;">✓ Heute exportiert</div>';
+}
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
+// ============ CRUD ============
+function addCustomer(name, location) {
+  const c = { id: genId(), name: name.trim(), location: location || '', createdAt: Date.now() };
+  state.customers.push(c); saveData(); return c;
+}
+function updateCustomer(id, name, location) {
+  const c = state.customers.find(x => x.id === id);
+  if (c) { c.name = name.trim(); c.location = location || ''; saveData(); }
+}
+function deleteCustomer(id) {
+  state.customers = state.customers.filter(x => x.id !== id);
+  state.reservations = state.reservations.filter(x => x.customerId !== id);
+  if (state.currentCustomerId === id) state.currentCustomerId = null;
+  saveData();
+}
+function saveDeliveryCost(id) {
+  const cost = parseFloat(document.getElementById('deliveryCostInput').value) || 0;
+  const c = state.customers.find(x => x.id === id);
+  if (c) { c.deliveryCost = cost; saveData(); renderAll(); showToast('Lieferkosten gespeichert'); }
+}
+function addReservation(customerId, type, size, total, delivered, year) {
+  const r = { id: genId(), customerId, type, size: Number(size), total: Number(total), delivered: Number(delivered || 0), year: year || CURRENT_YEAR, deliveryLog: [] };
+  state.reservations.push(r); saveData(); return r;
+}
+function updateReservation(id, data) {
+  const r = state.reservations.find(x => x.id === id);
+  if (r) { Object.assign(r, data); saveData(); }
+}
+function deleteReservation(id) {
+  state.reservations = state.reservations.filter(x => x.id !== id); saveData();
+}
+function incrementDelivered(id) {
+  showDeliveryDateModal(id, 1);
+}
+function decrementDelivered(id) {
+  showDeliveryDateModal(id, -1);
+}
+function showDeliveryDateModal(id, amount) {
+  const r = state.reservations.find(x => x.id === id);
+  if (!r) return;
+  if (amount > 0 && r.delivered >= r.total) return;
+  if (amount < 0 && r.delivered <= 0) return;
+  const customer = state.customers.find(c => c.id === r.customerId);
+  const today = new Date().toISOString().slice(0, 10);
+  const label = amount > 0 ? 'Rollen liefern' : 'Rollen zurücknehmen';
+  const maxQty = amount > 0 ? (r.total - r.delivered) : r.delivered;
+  showModal(`
+    <h3>${label}</h3>
+    <div style="font-size:0.85rem;color:var(--text-light);margin-bottom:12px;">${customer ? escapeHtml(customer.name) : ''} · ${TYPES.find(t=>t.id===r.type)?.label} · ${formatSize(r.size)}</div>
+    <div class="form-group">
+      <label for="deliveryDate">Datum</label>
+      <input type="date" id="deliveryDate" value="${today}">
+    </div>
+    <div class="form-group">
+      <label for="deliveryQty">Anzahl (max ${maxQty})</label>
+      <input type="number" id="deliveryQty" min="1" max="${maxQty}" value="1">
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="closeModal()">Abbrechen</button>
+      <button class="btn btn-primary" onclick="applyDelivery('${id}', ${amount})">Bestätigen</button>
+    </div>
+  `);
+  setTimeout(() => document.getElementById('deliveryQty')?.focus(), 100);
+}
+function applyDelivery(id, amount) {
+  const r = state.reservations.find(x => x.id === id);
+  if (!r) return;
+  const dateVal = document.getElementById('deliveryDate').value;
+  if (!dateVal) { showToast('Bitte Datum angeben'); return; }
+  let qty = parseInt(document.getElementById('deliveryQty').value) || 1;
+  if (amount > 0) {
+    const max = r.total - r.delivered;
+    qty = Math.min(qty, max);
+    if (qty < 1) { showToast('Keine Rollen mehr offen'); return; }
+    r.delivered += qty;
+  } else {
+    const max = r.delivered;
+    qty = Math.min(qty, max);
+    if (qty < 1) { showToast('Keine Rollen geliefert'); return; }
+    r.delivered -= qty;
+  }
+  if (!r.deliveryLog) r.deliveryLog = [];
+  const parts = dateVal.split('-');
+  const localDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+  r.deliveryLog.push({ date: localDate.toISOString(), amount: -amount * qty });
+  saveData(); closeModal(); renderAll();
+}
+function getCustomerReservations(customerId) {
+  return state.reservations.filter(r => r.customerId === customerId);
+}
+function getYears() {
+  const years = new Set();
+  state.reservations.forEach(r => years.add(r.year));
+  if (years.size === 0) years.add(CURRENT_YEAR);
+  const all = new Set(years);
+  all.add(CURRENT_YEAR - 1);
+  all.add(CURRENT_YEAR);
+  return [...all].sort((a, b) => a - b);
+}
+function yearOptions(selected) {
+  const y = CURRENT_YEAR;
+  const opts = [];
+  for (let i = y - 5; i <= y + 2; i++) {
+    opts.push(`<option value="${i}" ${i === selected ? 'selected' : ''}>${i}</option>`);
+  }
+  return opts.join('');
+}
+
+// ============ RENDERING ============
+let _reconnectTimer = null;
+function startReconnect() {
+  if (_reconnectTimer) return;
+  updateOfflineBadge();
+  _reconnectTimer = setInterval(() => {
+    fetch('/api/pin-status', { headers: getPINHeader(), signal: AbortSignal.timeout(3000) })
+      .then(r => r.json())
+      .then(() => {
+        clearInterval(_reconnectTimer);
+        _reconnectTimer = null;
+        showToast('Server erkannt');
+        tryConnectServer();
+      })
+      .catch(() => {});
+  }, 60000);
+}
+
+function renderAll() {
+  updateUnsavedBanner();
+  updateOfflineBadge();
+  renderSidebar();
+  if (state.currentTab === 'kunden') {
+    if (state.currentCustomerId && state.customers.find(c => c.id === state.currentCustomerId)) {
+      renderCustomerDetail(state.currentCustomerId);
+    } else {
+      renderCustomerList();
+    }
+  } else if (state.currentTab === 'lagerhalle') {
+    renderLagerhalle();
+  } else if (state.currentTab === 'backup') {
+    renderBackup();
+  }
+  updateMobileView();
+}
+
+function updateOfflineBadge() {
+  const badge = document.getElementById('offlineBadge');
+  if (badge) badge.style.display = _syncEnabled ? 'none' : 'inline';
+}
+
+function renderBackup() {
+  document.getElementById('appTitle').textContent = 'Backup';
+  document.getElementById('backBtn').style.display = 'none';
+  const isEdge = window.showDirectoryPicker;
+
+  let html = `<div style="max-width:600px;margin:0 auto;">`;
+
+  // QR-Code Bereich
+  html += `<div class="card" style="margin-bottom:16px;text-align:center;border-left:4px solid var(--primary);">`;
+  html += `<h3 style="margin-bottom:8px;">App auf dem Handy installieren</h3>`;
+  html += `<p style="color:var(--text-light);font-size:0.9rem;margin-bottom:12px;">QR-Code mit dem Handy scannen</p>`;
+  html += `<div id="backup-qr" style="margin:12px auto;display:inline-block;min-height:200px;background:#f5f5f5;border-radius:8px;"></div>`;
+  html += `<div style="background:#e8f5e9;padding:8px 12px;border-radius:6px;font-family:monospace;font-size:0.9rem;margin-top:8px;">`;
+  html += `<span id="backup-url" style="font-weight:700;color:#1B5E20;">Lade URL...</span>`;
+  html += `</div>`;
+  html += `<div style="margin-top:8px;font-size:0.78rem;color:var(--text-light);">Chrome am Handy → ⋮ → "Zum Startbildschirm hinzufügen"</div>`;
+  html += `</div>`;
+
+  let folderSection = '';
+  if (backupHandle) {
+    folderSection = `<div class="card" style="margin-bottom:12px;border-left:4px solid var(--primary);">
+      <div style="font-weight:700;margin-bottom:8px;">✓ Speicherordner aktiv</div>
+      <div style="font-size:0.85rem;color:var(--text-light);margin-bottom:10px;">Backup-Dateien werden automatisch beim Schließen gespeichert.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-sm" onclick="setBackupFolder()" style="background:#1565C0;color:#fff;">Ordner wechseln</button>
+        <button class="btn btn-sm" onclick="exportToBackupFolder()">Jetzt exportieren</button>
+        <button class="btn btn-sm" onclick="loadAndRestoreBackup()">Aus Ordner laden</button>
+      </div>
+    </div>`;
+  } else if (isEdge) {
+    folderSection = `<div class="card" style="margin-bottom:12px;border-left:4px solid #1565C0;">
+      <div style="font-weight:700;margin-bottom:8px;color:#1565C0;">Speicherordner festlegen</div>
+      <div style="font-size:0.85rem;color:var(--text-light);margin-bottom:10px;">Wähle einen Ordner auf deinem PC. Danach werden Backups automatisch dort gespeichert.</div>
+      <button class="btn btn-sm" onclick="setBackupFolder()" style="background:#1565C0;color:#fff;font-weight:600;border:none;border-radius:6px;padding:10px 20px;cursor:pointer;font-size:0.9rem;"> Ordner auswählen</button>
+    </div>`;
+  } else {
+    folderSection = `<div class="card" style="margin-bottom:12px;border-left:4px solid #ff8a65;">
+      <div style="font-weight:700;margin-bottom:8px;color:#e65100;">Auto-Backup nicht verfügbar</div>
+      <div style="font-size:0.85rem;color:var(--text-light);margin-bottom:8px;">Dein Browser unterstützt keine Ordner-Auswahl. Nutze Microsoft Edge oder Chrome für Auto-Backup.</div>
+      <div style="font-size:0.82rem;color:var(--text-light);">Alternativ: Download JSON für manuelle Sicherung</div>
+    </div>`;
+  }
+
+  html += folderSection;
+
+  html += `<div class="card" style="margin-bottom:12px;">`;
+  html += `<div style="font-weight:700;margin-bottom:8px;">Export</div>`;
+  html += `<div style="display:flex;gap:8px;flex-wrap:wrap;">`;
+  html += `<button class="btn btn-sm" onclick="exportData()">Download JSON</button>`;
+  if (!backupHandle) {
+    html += `<button class="btn btn-sm" onclick="exportToBackupFolder()" style="background:#1565C0;color:#fff;">In Backup-Ordner</button>`;
+  }
+  html += `</div></div>`;
+
+  html += `<div class="card" style="margin-bottom:12px;">`;
+  html += `<div style="font-weight:700;margin-bottom:8px;">Import</div>`;
+  html += `<div style="display:flex;gap:8px;flex-wrap:wrap;">`;
+  html += `<button class="btn btn-sm" onclick="importData()">JSON importieren</button>`;
+  html += `<button class="btn btn-sm" onclick="importReservationsOnly()" style="background:#2e7d32;color:#fff;">Nur Reservierungen laden</button>`;
+  html += `${localStorage.getItem('heubestellung_backup') ? '<button class="btn btn-sm" onclick="restoreBackup()">Browser-Sicherung wiederherstellen</button>' : ''}`;
+  if (backupHandle) {
+    html += `<button class="btn btn-sm" onclick="loadAndRestoreBackup()">Aus Backup-Ordner laden</button>`;
+  }
+  html += `</div></div>`;
+
+  html += `<div class="card">`;
+  html += `<div style="font-weight:700;margin-bottom:8px;">Hinweise</div>`;
+  html += `<div style="font-size:0.85rem;color:var(--text-light);line-height:1.6;">`;
+  html += `<p>• Daten werden lokal im Browser gespeichert (localStorage)</p>`;
+  html += `<p>• Bei aktivem Backup-Ordner: automatische Sicherung beim Schließen</p>`;
+  html += `<p>• JSON-Export enthält alle Kunden, Reservierungen und Lagerhallen-Daten</p>`;
+  html += `</div></div>`;
+
+  html += `</div>`;
+  document.getElementById('mainContent').innerHTML = html;
+
+  // QR-Code generieren
+  setTimeout(() => {
+    fetch('/api/ip')
+      .then(r => r.json())
+      .then(data => {
+        const url = `http://${data.ip}:${data.port}`;
+        const urlEl = document.getElementById('backup-url');
+        if (urlEl) urlEl.textContent = url;
+        const qrEl = document.getElementById('backup-qr');
+        if (qrEl && typeof QRCode !== 'undefined') {
+          qrEl.innerHTML = '';
+          new QRCode(qrEl, {
+            text: url,
+            width: 200,
+            height: 200,
+            colorDark: '#1B5E20',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.M
+          });
+        } else if (qrEl) {
+          qrEl.innerHTML = '<div style="padding:20px;color:red;">QR-Bibliothek nicht geladen</div>';
+        }
+      })
+      .catch(() => {});
+  }, 100);
+}
+
+function renderCustomerList() {
+  document.getElementById('appTitle').textContent = 'HofBese';
+  document.getElementById('backBtn').style.display = 'none';
+  const searchTerm = (document.getElementById('sb-search')?.value || window._sbSearchValue || '').toLowerCase();
+  window._sbSearchValue = searchTerm;
+  const filtered = state.customers.filter(c => c.name.toLowerCase().includes(searchTerm)).sort((a, b) => {
+    const aRes = getCustomerReservations(a.id);
+    const bRes = getCustomerReservations(b.id);
+    const aOffen = aRes.reduce((s, r) => s + (r.total - r.delivered), 0);
+    const bOffen = bRes.reduce((s, r) => s + (r.total - r.delivered), 0);
+    const aHasOffen = aOffen > 0 ? 0 : 1;
+    const bHasOffen = bOffen > 0 ? 0 : 1;
+    if (aHasOffen !== bHasOffen) return aHasOffen - bHasOffen;
+    return a.name.localeCompare(b.name);
+  });
+  const isEdge = window.showDirectoryPicker;
+  let backupStatus;
+  if (backupHandle) {
+    backupStatus = '<span style="color:var(--primary);font-weight:600;font-size:0.78rem;">✓ Backup aktiv</span>';
+  } else if (isEdge) {
+    backupStatus = '<button class="btn btn-sm" onclick="setBackupFolder()" style="background:#1565C0;color:#fff;font-weight:600;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:0.78rem;">Ordner wählen</button>';
+  } else {
+    backupStatus = '';
+  }
+
+  let html = `<div style="max-width:800px;margin:0 auto;">`;
+
+  // Reservierungsübersicht
+  const years = getYears();
+  const mobile = isMobile();
+  html += `<div style="margin-bottom:${mobile ? '12px' : '20px'};">`;
+  html += `<h3 style="margin-bottom:${mobile ? '6px' : '10px'};font-size:${mobile ? '1rem' : '1.2rem'};">Reservierungsübersicht</h3>`;
+  years.forEach(y => {
+    const res = state.reservations.filter(r => r.year === y);
+    const t = res.reduce((s, r) => s + r.total, 0);
+    const d = res.reduce((s, r) => s + r.delivered, 0);
+    const o = t - d;
+    const p = t > 0 ? Math.round(d / t * 100) : 0;
+    const label = y < CURRENT_YEAR ? y + ' (Vorjahr)' : y;
+    html += `<div style="border:2px solid #bbb;border-radius:8px;padding:${mobile ? '8px' : '12px'};margin-bottom:${mobile ? '6px' : '8px'};">`;
+    html += `<div style="font-weight:700;font-size:${mobile ? '0.75rem' : '0.85rem'};margin-bottom:${mobile ? '6px' : '10px'};">${label}</div>`;
+    html += `<div style="display:flex;justify-content:space-around;text-align:center;margin-bottom:${mobile ? '6px' : '12px'};">`;
+    html += `<div><div style="font-size:${mobile ? '1rem' : '1.3rem'};font-weight:700;color:var(--primary);">${t}</div><div style="color:var(--text-light);font-size:${mobile ? '0.6rem' : '0.75rem'};">reserviert</div></div>`;
+    html += `<div><div style="font-size:${mobile ? '1rem' : '1.3rem'};font-weight:700;color:var(--primary);">${d}</div><div style="color:var(--text-light);font-size:${mobile ? '0.6rem' : '0.75rem'};">geliefert</div></div>`;
+    html += `<div><div style="font-size:${mobile ? '1rem' : '1.3rem'};font-weight:700;">${o}</div><div style="color:var(--text-light);font-size:${mobile ? '0.6rem' : '0.75rem'};">offen</div></div>`;
+    html += `</div>`;
+    if (p > 0 && p < 100) {
+      html += `<div style="height:${mobile ? '4px' : '6px'};background:#e0e0e0;border-radius:3px;overflow:hidden;margin-bottom:${mobile ? '6px' : '12px'};"><div style="height:100%;width:${p}%;background:var(--primary);border-radius:3px;"></div></div>`;
+    }
+
+    // Offen und Geliefert nach Typ unterteilt
+    TYPES.forEach(type => {
+      const typeRes = res.filter(r => r.type === type.id);
+      const typeTotal = typeRes.reduce((s, r) => s + r.total, 0);
+      if (typeTotal === 0) return;
+      const typeDelivered = typeRes.reduce((s, r) => s + r.delivered, 0);
+      const typeOffen = typeTotal - typeDelivered;
+      const typeColor = type.id === 'schnitt1' ? '#555' : (TYPE_COLORS[type.id] || '#555');
+
+      html += `<div style="margin-top:${mobile ? '8px' : '12px'};padding-top:${mobile ? '6px' : '12px'};border-top:1px solid var(--border);">`;
+      html += `<div style="font-size:${mobile ? '0.72rem' : '0.85rem'};font-weight:700;color:${typeColor};margin-bottom:${mobile ? '4px' : '8px'};">${type.label}</div>`;
+
+      const offenItems = [];
+      const geliefertItems = [];
+      SIZES.forEach(s => {
+        const sRes = typeRes.filter(r => r.size === s);
+        const sTotal = sRes.reduce((a, r) => a + r.total, 0);
+        const sDelivered = sRes.reduce((a, r) => a + r.delivered, 0);
+        const sOffen = sTotal - sDelivered;
+        if (sTotal === 0) return;
+        const dotColor = type.id === 'schnitt1' ? SIZE_COLORS[s] : typeColor;
+        const dotSize = mobile ? '22px' : '28px';
+        const dotFontSize = mobile ? '0.7rem' : '0.85rem';
+        const numFontSize = mobile ? '1rem' : '1.3rem';
+        if (sOffen > 0) offenItems.push(`<div style="display:flex;align-items:center;gap:${mobile ? '4px' : '6px'};"><div style="display:flex;align-items:center;justify-content:center;width:${dotSize};height:${dotSize};border-radius:50%;background:${dotColor};flex-shrink:0;font-size:${dotFontSize};color:#000;">${s.toString().replace('.', ',')}</div><span style="font-size:${numFontSize};font-weight:700;line-height:1;">${sOffen}</span></div>`);
+        if (sDelivered > 0) geliefertItems.push(`<div style="display:flex;align-items:center;gap:${mobile ? '4px' : '6px'};"><div style="display:flex;align-items:center;justify-content:center;width:${dotSize};height:${dotSize};border-radius:50%;background:${dotColor};flex-shrink:0;font-size:${dotFontSize};color:#000;">${s.toString().replace('.', ',')}</div><span style="font-size:${numFontSize};font-weight:700;line-height:1;color:var(--text-light);">${sDelivered}</span></div>`);
+      });
+
+      html += `<div style="display:flex;gap:${mobile ? '10px' : '20px'};flex-wrap:wrap;">`;
+      html += `<div style="flex:2;min-width:${mobile ? '0' : '200px'};">`;
+      html += `<div style="font-size:${mobile ? '0.65rem' : '0.72rem'};font-weight:700;color:var(--primary);margin-bottom:${mobile ? '4px' : '6px'};text-transform:uppercase;">Offen (${typeOffen})</div>`;
+      if (offenItems.length > 0) {
+        html += `<div style="display:flex;gap:${mobile ? '8px' : '12px'};flex-wrap:wrap;">${offenItems.join('')}</div>`;
+      } else {
+        html += `<div style="font-size:${mobile ? '0.7rem' : '0.82rem'};color:var(--text-light);">Keine offen</div>`;
+      }
+      html += `</div>`;
+
+      if (!mobile) {
+        html += `<div style="width:2px;background:var(--border);border-radius:1px;align-self:stretch;"></div>`;
+      }
+
+      html += `<div style="flex:1;min-width:${mobile ? '0' : '200px'};">`;
+      html += `<div style="font-size:${mobile ? '0.65rem' : '0.72rem'};font-weight:700;color:var(--text-light);margin-bottom:${mobile ? '4px' : '6px'};text-transform:uppercase;">Geliefert (${typeDelivered})</div>`;
+      if (geliefertItems.length > 0) {
+        html += `<div style="display:flex;gap:${mobile ? '8px' : '12px'};flex-wrap:wrap;">${geliefertItems.join('')}</div>`;
+      } else {
+        html += `<div style="font-size:${mobile ? '0.7rem' : '0.82rem'};color:var(--text-light);">Keine geliefert</div>`;
+      }
+      html += `</div>`;
+      html += `</div>`;
+      html += `</div>`;
+    });
+
+    html += `</div>`;
+  });
+  html += `</div>`;
+
+  html += `<div style="display:flex;gap:${mobile ? '6px' : '10px'};margin-bottom:${mobile ? '10px' : '16px'};flex-wrap:wrap;align-items:center;">`;
+  html += `<input type="text" id="sb-search" placeholder="Kunde suchen..." value="${escapeHtml(searchTerm)}" oninput="window._sbSearchValue=this.value;renderCustomerList()" style="flex:1;min-width:${mobile ? '120px' : '200px'};padding:${mobile ? '7px 10px' : '9px 12px'};border:2px solid var(--border);border-radius:8px;font-size:${mobile ? '0.82rem' : '0.9rem'};">`;
+  html += `<button class="btn btn-primary" onclick="showNewCustomerWizard()" style="padding:${mobile ? '7px 12px' : '9px 16px'};font-size:${mobile ? '0.82rem' : '0.88rem'};">+ Neuer Kunde</button>`;
+  html += `</div>`;
+
+  html += `<h3 style="margin-bottom:${mobile ? '6px' : '10px'};font-size:${mobile ? '1rem' : '1.2rem'};">Kunden</h3>`;
+  if (filtered.length === 0) {
+    html += `<div style="text-align:center;padding:40px 10px;color:var(--text-light);font-size:0.95rem;">${state.customers.length === 0 ? 'Noch keine Kunden' : 'Keine Treffer'}</div>`;
+  } else {
+    html += `<div style="display:grid;gap:8px;">`;
+    filtered.forEach(c => {
+      const res = getCustomerReservations(c.id);
+      const years = [...new Set(res.map(r => r.year))].sort((a, b) => a - b);
+      const yearOffen = {};
+      years.forEach(y => {
+        yearOffen[y] = res.filter(r => r.year === y).reduce((s, r) => s + (r.total - r.delivered), 0);
+      });
+      const totalOffen = Object.values(yearOffen).reduce((s, v) => s + v, 0);
+      const grayStyle = totalOffen > 0 ? '' : 'opacity:0.5;';
+      html += `<div class="card" style="cursor:pointer;margin-bottom:0;padding:${mobile ? '8px 10px' : '16px'};${grayStyle}" onclick="selectCustomer('${c.id}')">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:${mobile ? '4px' : '8px'};">
+          <div>
+            <div style="font-weight:600;font-size:${mobile ? '0.88rem' : '1rem'};${totalOffen > 0 ? '' : 'color:var(--text-light);'}">${escapeHtml(c.name)}</div>
+            ${c.location ? `<div style="font-size:${mobile ? '0.72rem' : '0.82rem'};color:var(--text-light);">${escapeHtml(c.location)}</div>` : ''}
+          </div>
+          <div style="display:flex;gap:${mobile ? '8px' : '16px'};font-size:${mobile ? '0.85rem' : '1rem'};align-items:center;${totalOffen > 0 ? '' : 'color:var(--text-light);'}">
+            ${years.filter(y => yearOffen[y] > 0).map((y, i, arr) => {
+              const isCurrent = y === CURRENT_YEAR;
+              const color = isCurrent ? 'var(--primary)' : 'var(--text-light)';
+              const sep = (!mobile && i < arr.length - 1) ? '<div style="width:2px;height:48px;background:var(--border);border-radius:1px;"></div>' : '';
+              return `<div style="text-align:center;">
+                <div style="font-size:${mobile ? '0.7rem' : '0.85rem'};color:${color};font-weight:700;">${y}</div>
+                <div style="font-size:${mobile ? '1.2rem' : '1.6rem'};font-weight:700;color:${color};line-height:1;">${yearOffen[y]}</div>
+              </div>${sep}`;
+            }).join('')}
+          </div>
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  html += `</div>`;
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+function renderSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const tab = state.currentTab;
+  const syncDot = _syncEnabled
+    ? '<span style="position:absolute;top:4px;right:4px;width:12px;height:12px;background:#2e7d32;border-radius:50%;border:2px solid #e8e8e8;"></span>'
+    : '<span style="position:absolute;top:4px;right:4px;width:12px;height:12px;background:#ff8a65;border-radius:50%;border:2px solid #e8e8e8;"></span>';
+  const syncLabel = _syncEnabled ? 'Sync' : 'Offline';
+  const connDisplay = _connInfoVisible ? 'block' : 'none';
+  sidebar.innerHTML = `
+    <div class="sidebar-tabs">
+      <div class="tab-bar">
+        <button class="tab-btn ${tab === 'kunden' ? 'active' : ''}" onclick="switchTab('kunden')" title="Kunden"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-7 8-7s8 3 8 7"/></svg></button>
+        <button class="tab-btn ${tab === 'lagerhalle' ? 'active' : ''}" onclick="switchTab('lagerhalle')" title="Lagerhalle"><svg viewBox="0 0 24 24"><path d="M3 21V8l9-5 9 5v13"/><rect x="9" y="12" width="6" height="9"/><line x1="3" y1="21" x2="21" y2="21"/></svg></button>
+        <button class="tab-btn ${tab === 'backup' ? 'active' : ''}" onclick="switchTab('backup')" title="Backup"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+        <button class="tab-btn ${_connInfoVisible ? 'active' : ''}" id="syncTabBtn" onclick="doSyncFromHandy()" title="Sync vom Handy" style="position:relative;font-size:0.7rem;font-weight:700;">${syncDot}${syncLabel}</button>
+      </div>
+    </div>
+    <div id="connection-info" class="sidebar-content" style="display:${connDisplay};">
+      <div class="card" style="margin:0;"><div style="font-weight:700;margin-bottom:8px;color:var(--text);font-size:0.9rem;">Verbindung</div><div id="conn-details" style="font-size:0.8rem;color:var(--text-light);line-height:1.8;">Lade...</div></div>
+    </div>
+  `;
+}
+
+// Sync-Button: Zeigt Bestätigung, dann lädt/vom Server (Handy & PC)
+function doSyncFromHandy() {
+  if (_reconnectTimer) { clearInterval(_reconnectTimer); _reconnectTimer = null; }
+  showModal(`
+    <h3>Daten vom Server laden?</h3>
+    <p style="margin-bottom:16px;color:var(--text-light);">Sollen die aktuellen Daten vom Server auf dieses Gerät geladen werden?</p>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="confirmSyncFromPhone()">Ja</button>
+      <button class="btn" onclick="closeModal()">Nein</button>
+    </div>
+  `);
+}
+
+// PC: Daten vom Server laden (nach Bestätigung)
+function confirmSyncFromPhone() {
+  closeModal();
+  showToast('Hole Daten vom Server...');
+  fetch('/api/data', { headers: getPINHeader(), signal: AbortSignal.timeout(5000) })
+    .then(r => {
+      if (r.status === 401) { showToast('PIN falsch'); throw new Error('PIN falsch'); }
+      if (!r.ok) throw new Error('Sync-Fehler ' + r.status);
+      return r.json();
+    })
+    .then(result => {
+      const d = result.data;
+      const count = (d.customers || []).length;
+      if (count > 0) {
+        state.customers = (d.customers || []).map(c => { if (!c.location) c.location = ''; if (c.deliveryCost === undefined) c.deliveryCost = 0; return c; });
+        state.reservations = (d.reservations || []).map(r => {
+          if (!r.year) r.year = CURRENT_YEAR;
+          if (!r.deliveryLog) r.deliveryLog = [];
+          return r;
+        });
+        state.fields = d.fields || [];
+        state.workLogs = d.workLogs || [];
+        state.harvests = d.harvests || [];
+        state.hallSlots = d.hallSlots || {};
+        state.currentCustomerId = null;
+        state.currentTab = 'kunden';
+        localStorage.setItem('heubestellung', JSON.stringify({
+          customers: state.customers,
+          reservations: state.reservations,
+          fields: state.fields,
+          workLogs: state.workLogs,
+          harvests: state.harvests,
+          hallSlots: state.hallSlots
+        }));
+        _dataVersion++;
+        _serverVersion = result.version;
+        _syncChoice = 'server';
+        localStorage.setItem('heubestellung_sync_choice', 'server');
+        renderAll();
+        renderSidebar();
+        showToast('Sync fertig: ' + count + ' Kunden vom Handy');
+      } else {
+        showToast('Keine Daten auf dem Server – zuerst auf dem Handy senden');
+      }
+    })
+    .catch(() => {
+      showToast('Server nicht erreichbar');
+    });
+}
+
+// Sync-Abfrage auf dem PC anzeigen
+function showSyncRequestModal(deviceName, clientData) {
+  _showingSyncModal = true;
+  showModal(`
+    <h3>Neues Gerät erkannt</h3>
+    <p style="margin-bottom:16px;color:var(--text-light);"><strong>${escapeHtml(deviceName)}</strong> hat Daten zum Syncen.</p>
+    <div style="margin-bottom:16px;">
+      <p style="font-weight:600;margin-bottom:8px;">Sync-Richtung wählen:</p>
+      <div class="wiz-options">
+        <button class="wiz-option" onclick="acceptSync('merge')" style="justify-content:center;">
+          Zusammenführen (beide Daten behalten)
+        </button>
+        <button class="wiz-option" onclick="acceptSync('server')" style="justify-content:center;">
+          Server-Daten → Handy (Überschreiben)
+        </button>
+        <button class="wiz-option" onclick="acceptSync('client')" style="justify-content:center;">
+          Handy-Daten → Server (Überschreiben)
+        </button>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="declineSync()">Ablehnen</button>
+    </div>
+  `);
+  document.getElementById('modalOverlay').onclick = function(e) {
+    if (e.target === this && !_showingSyncModal) closeModal();
+  };
+}
+
+function acceptSync(mode) {
+  localStorage.setItem('heubestellung_sync_choice', mode);
+  _syncChoice = mode;
+  closeModal();
+  _showingSyncModal = false;
+  fetch('/api/sync-accept', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ mode })
+  })
+  .then(r => r.json())
+  .then(result => {
+    if (result.data) {
+      applyServerData(result.data);
+      saveData();
+    }
+    _syncEnabled = true;
+    renderAll();
+    renderSidebar();
+    showToast('Sync abgeschlossen');
+  })
+  .catch(() => showToast('Sync fehlgeschlagen'));
+}
+
+function declineSync() {
+  closeModal();
+  _showingSyncModal = false;
+  fetch('/api/sync-decline', { method: 'POST' }).catch(() => {});
+  showToast('Sync abgelehnt');
+}
+
+let _connInfoTimer = null;
+let _connInfoVisible = false;
+
+function toggleConnectionInfo() {
+  _connInfoVisible = !_connInfoVisible;
+  renderSidebar();
+  if (_connInfoVisible) loadConnectionInfo();
+}
+
+function loadConnectionInfo() {
+  if (_connInfoTimer) clearInterval(_connInfoTimer);
+  function fetchInfo() {
+    if (!_connInfoVisible) { if (_connInfoTimer) clearInterval(_connInfoTimer); return; }
+    fetch('/api/info', { signal: AbortSignal.timeout(3000) })
+      .then(r => r.json())
+      .then(info => {
+        const el = document.getElementById('conn-details');
+        if (!el) return;
+        const isLocal = info.clientIp === '127.0.0.1' || info.clientIp === '::1' || info.clientIp.startsWith('192.168.');
+        const connType = isLocal ? 'PC/LAN/WLAN' : 'Mobil/Remote';
+        el.innerHTML = `
+          <div><b>Server:</b> ${info.serverIp}:${info.serverPort}</div>
+          <div><b>Client:</b> ${info.clientIp}</div>
+          <div><b>Typ:</b> ${connType}</div>
+          <div><b>Gerät:</b> ${escapeHtml(_deviceName)}</div>
+          <div style="margin-top:6px;font-size:0.7rem;color:#888;">${new Date(info.timestamp).toLocaleTimeString()}</div>
+        `;
+      })
+      .catch(() => {
+        const el = document.getElementById('conn-details');
+        if (el) el.innerHTML = '<div style="color:#ff8a65;font-weight:600;">Offline – lokale Daten aktiv</div>';
+      });
+  }
+  fetchInfo();
+  _connInfoTimer = setInterval(fetchInfo, 30000);
+}
+
+function renderSizeBreakdown(year) {
+  const filtered = year ? state.reservations.filter(r => r.year === year) : state.reservations;
+  return SIZES.map(s => {
+    const res = filtered.filter(r => r.size === s);
+    const t = res.reduce((a, r) => a + r.total, 0);
+    const d = res.reduce((a, r) => a + r.delivered, 0);
+    const o = t - d;
+    if (t === 0) return '';
+    return '<div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;padding:2px 0;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+SIZE_COLORS[s]+';flex-shrink:0;"></span><span style="min-width:30px;">'+s.toString().replace('.',',')+'m</span><span style="font-weight:600;">'+t+'</span><span style="color:var(--text-light);">('+d+' gel. · '+o+' offen)</span></div>';
+  }).filter(Boolean).join('');
+}
+
+function renderYearSection(total, delivered, offen, pct, year, showBreakdown) {
+  const label = year < CURRENT_YEAR ? year + ' <span style="font-weight:400;font-size:0.7rem;color:var(--text-light);">(Vorjahr)</span>' : year;
+  return '<div style="border:2px solid #bbb;border-radius:8px;padding:10px;margin-top:10px;"><div style="font-weight:700;font-size:0.85rem;margin-bottom:6px;">' + label + '</div>' +
+    '<div style="display:flex;justify-content:space-around;text-align:center;margin-bottom:4px;">' +
+    '<div><div style="font-size:1rem;font-weight:700;color:var(--primary);">' + total + '</div><div style="color:var(--text-light);font-size:0.7rem;">reserviert</div></div>' +
+    '<div><div style="font-size:1rem;font-weight:700;color:var(--primary);">' + delivered + '</div><div style="color:var(--text-light);font-size:0.7rem;">geliefert</div></div>' +
+    '<div><div style="font-size:1rem;font-weight:700;">' + offen + '</div><div style="color:var(--text-light);font-size:0.7rem;">offen</div></div>' +
+    '</div>' +
+    (pct > 0 && pct < 100 ? '<div style="height:4px;background:#e0e0e0;border-radius:2px;overflow:hidden;margin-bottom:4px;"><div style="height:100%;width:' + pct + '%;background:var(--primary);border-radius:2px;"></div></div>' : '') +
+    (showBreakdown ? renderSizeBreakdown(year) : '') + '</div>';
+}
+
+function renderKundenSummary() {
+  const years = getYears();
+  return '<div onclick="state.currentCustomerId=null;renderAll()" style="background:var(--bg);border-radius:8px;padding:10px;margin-bottom:10px;font-size:0.78rem;cursor:pointer;">' +
+    years.map(y => {
+      const res = state.reservations.filter(r => r.year === y);
+      const t = res.reduce((s, r) => s + r.total, 0);
+      const d = res.reduce((s, r) => s + r.delivered, 0);
+      const o = t - d;
+      const p = t > 0 ? Math.round(d / t * 100) : 0;
+      return renderYearSection(t, d, o, p, y, false);
+    }).join('') + '</div>';
+}
+
+function renderEmptyTypeTable(year) {
+  const filtered = year ? state.reservations.filter(r => r.year === year) : state.reservations;
+  return TYPES.map(type => {
+    const typeRes = filtered.filter(r => r.type === type.id);
+    if (typeRes.length === 0) return '';
+    const typeColor = type.id === 'schnitt1' ? '#555' : TYPE_COLORS[type.id];
+    const sizeRows = SIZES.map(s => {
+      const res = typeRes.filter(r => r.size === s);
+      const t = res.reduce((a, r) => a + r.total, 0);
+      const d = res.reduce((a, r) => a + r.delivered, 0);
+      const o = t - d;
+      if (t === 0) return '';
+      const pct2 = t > 0 ? Math.round(d / t * 100) : 0;
+      const color = type.id === 'schnitt1' ? SIZE_COLORS[s] : typeColor;
+      return '<tr style="border-bottom:1px solid var(--border);"><td style="padding:4px 8px;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + color + ';vertical-align:middle;margin-right:6px;"></span>' + s.toString().replace('.', ',') + 'm</td><td style="padding:4px 8px;text-align:center;font-weight:600;">' + t + '</td><td style="padding:4px 8px;text-align:center;">' + d + '</td><td style="padding:4px 8px;text-align:center;font-weight:600;">' + o + '</td></tr>' +
+        (pct2 > 0 && pct2 < 100 ? '<tr style="border-bottom:1px solid var(--border);"><td colspan="4" style="padding:0 8px 4px;"><div style="height:3px;background:#e0e0e0;border-radius:2px;overflow:hidden;"><div style="height:100%;width:' + pct2 + '%;background:' + color + ';border-radius:2px;"></div></div></td></tr>' : '');
+    }).filter(Boolean).join('');
+    if (!sizeRows) return '';
+    return '<div style="margin-top:10px;"><div style="font-weight:700;font-size:0.85rem;margin-bottom:4px;color:' + typeColor + ';">' + type.label + '</div><table style="width:100%;border-collapse:collapse;font-size:0.8rem;"><tr style="border-bottom:2px solid var(--border);"><th style="padding:4px 8px;text-align:left;">Größe</th><th style="padding:4px 8px;text-align:center;">reserviert</th><th style="padding:4px 8px;text-align:center;">geliefert</th><th style="padding:4px 8px;text-align:center;">offen</th></tr>' + sizeRows + '</table></div>';
+  }).filter(Boolean).join('');
+}
+
+function renderEmptyDetail() {
+  const years = getYears();
+  const hasLocalBackup = !!localStorage.getItem('heubestellung_backup');
+  document.getElementById('mainContent').innerHTML = '<div style="padding:20px;max-width:600px;margin:0 auto;text-align:center;">' +
+    '<h2 style="margin-bottom:16px;">Alle Reservierungen</h2>' +
+    years.map(y => {
+      const res = state.reservations.filter(r => r.year === y);
+      const t = res.reduce((s, r) => s + r.total, 0);
+      const d = res.reduce((s, r) => s + r.delivered, 0);
+      const o = t - d;
+      const p = t > 0 ? Math.round(d / t * 100) : 0;
+      const label = y < CURRENT_YEAR ? y + ' <span style="font-weight:400;color:var(--text-light);">(Vorjahr)</span>' : y;
+      return '<div style="border:2px solid #bbb;border-radius:8px;padding:14px;margin-top:16px;"><div style="font-weight:700;font-size:0.9rem;margin-bottom:10px;">' + label + '</div><div style="display:flex;justify-content:space-around;margin-bottom:8px;">' +
+        '<div><div style="font-size:1.5rem;font-weight:700;color:var(--primary);">' + t + '</div><div style="color:var(--text-light);font-size:0.8rem;">reserviert (' + label + ')</div></div>' +
+        '<div><div style="font-size:1.5rem;font-weight:700;color:var(--primary);">' + d + '</div><div style="color:var(--text-light);font-size:0.8rem;">geliefert</div></div>' +
+        '<div><div style="font-size:1.5rem;font-weight:700;">' + o + '</div><div style="color:var(--text-light);font-size:0.8rem;">offen</div></div>' +
+        '</div>' +
+        (p > 0 && p < 100 ? '<div style="height:8px;background:#e0e0e0;border-radius:4px;overflow:hidden;margin-bottom:8px;"><div style="height:100%;width:' + p + '%;background:var(--primary);border-radius:4px;"></div></div>' : '') +
+        renderEmptyTypeTable(y) + '</div>';
+    }).join('') +
+    (state.customers.length === 0 ? '<div style="margin-top:20px;padding:16px;background:#fff3e0;border-radius:8px;text-align:center;"><div style="font-weight:600;margin-bottom:8px;">Keine Kundendaten vorhanden</div><div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">' + (hasLocalBackup ? '<button class="btn btn-sm btn-primary" onclick="restoreBackup()">Browser-Sicherung</button>' : '') + '<button class="btn btn-sm btn-primary" onclick="importData()">Importieren</button></div><div style="margin-top:10px;font-size:0.8rem;color:var(--text-light);">Oder lege einen neuen Kunden an</div></div>' : '<div style="margin-top:20px;color:var(--text-light);font-size:0.85rem;">Klicke links auf einen Kunden f&uuml;r Details</div>') +
+    '</div>';
+}
+
+function renderKundenSidebarContent() {
+  const searchTerm = (document.getElementById('sb-search')?.value || window._sbSearchValue || '').toLowerCase();
+  window._sbSearchValue = searchTerm;
+  const filtered = state.customers.filter(c => c.name.toLowerCase().includes(searchTerm)).sort((a, b) => a.name.localeCompare(b.name));
+  let html = `
+      <div class="sb-header">
+        <h2>Kunden</h2>
+        <button class="btn btn-primary btn-sm" onclick="showNewCustomerWizard()">+ Neu</button>
+      </div>
+      <button class="btn btn-sm" onclick="exportToBackupFolder()" style="width:100%;margin-bottom:10px;background:#1565C0;color:#fff;font-weight:600;">In Backup-Ordner exportieren</button>
+    <input type="text" id="sb-search" placeholder="Kunde suchen..." value="${escapeHtml(searchTerm)}" oninput="window._sbSearchValue=this.value;renderSidebar()">
+    ${renderKundenSummary()}
+  `;
+  if (filtered.length === 0) {
+    html += `<div style="text-align:center;padding:30px 10px;color:var(--text-light);font-size:0.85rem;">${state.customers.length === 0 ? 'Noch keine Kunden' : 'Keine Treffer'}</div>`;
+  } else {
+    html += filtered.map(c => {
+      const res = getCustomerReservations(c.id);
+      const total = res.reduce((s, r) => s + r.total, 0);
+      const offen = total - res.reduce((s, r) => s + r.delivered, 0);
+      const hasCurrentYear = res.some(r => r.year === CURRENT_YEAR);
+      return `
+        <div class="sb-customer${c.id === state.currentCustomerId ? ' active' : ''}" onclick="selectCustomer('${c.id}')">
+          <div style="flex:1;min-width:0;">
+            <div class="name">${escapeHtml(c.name)} ${hasCurrentYear ? '<span style="color:#2e7d32;font-weight:600;font-size:0.72rem;">' + CURRENT_YEAR + '</span>' : ''}</div>
+            ${c.location ? `<div style="font-size:0.72rem;color:var(--text-light);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(c.location)}</div>` : ''}
+          </div>
+          <span class="badge"><span>${total}</span> · <span>${offen}</span> offen</span>
+        </div>
+      `;
+    }).join('');
+  }
+  return html;
+}
+
+function renderLagerhalleSidebarContent() {
+  const totalSlots = 10 * 32;
+  const occupiedSlots = Object.keys(state.hallSlots || {}).length;
+  const ftRolls = (state.hallSlots['futtertisch'] || { rolls: [] }).rolls.length;
+  const totalRolls = Object.values(state.hallSlots || {}).reduce((sum, s) => sum + (s.rolls || []).length, 0);
+  const pct = totalSlots > 0 ? Math.round(occupiedSlots / totalSlots * 100) : 0;
+  return `
+    <div class="sb-header"><h2>Lagerhalle</h2></div>
+    <button class="btn btn-sm" onclick="exportToBackupFolder()" style="width:100%;margin-bottom:10px;background:#1565C0;color:#fff;font-weight:600;">In Backup-Ordner exportieren</button>
+    <div style="text-align:center;padding:8px 0;">
+      <div style="font-size:1.6rem;font-weight:700;color:var(--primary);">${totalRolls}</div>
+      <div style="font-size:0.78rem;color:var(--text-light);">Rollen eingelagert</div>
+    </div>
+    <div style="display:flex;justify-content:space-around;padding:8px 0;border-top:1px solid var(--border);font-size:0.82rem;">
+      <div><span style="font-weight:600;color:var(--primary);">${occupiedSlots}</span> belegt</div>
+      <div><span style="font-weight:600;">${totalSlots - occupiedSlots}</span> frei</div>
+      <div><span style="font-weight:600;color:#e65100;">${ftRolls}</span> FT</div>
+    </div>
+    <div style="padding:10px 0;">
+      <div style="height:8px;background:#e0e0e0;border-radius:4px;overflow:hidden;">
+        <div style="height:100%;width:${pct}%;background:var(--primary);border-radius:4px;transition:width 0.3s;"></div>
+      </div>
+      <div style="text-align:center;font-size:0.75rem;color:var(--text-light);margin-top:4px;">${pct}% belegt</div>
+    </div>
+  `;
+}
+
+function renderCustomerDetail(customerId) {
+  const c = state.customers.find(x => x.id === customerId);
+  if (!c) { renderCustomerList(); return; }
+  document.getElementById('appTitle').textContent = isMobile() ? c.name : 'HofBese';
+  document.getElementById('backBtn').style.display = isMobile() ? 'block' : 'none';
+  const res = getCustomerReservations(customerId);
+  const total = res.reduce((s, r) => s + r.total, 0);
+  const delivered = res.reduce((s, r) => s + r.delivered, 0);
+  const remaining = total - delivered;
+  const pct = total > 0 ? Math.round(delivered / total * 100) : 0;
+
+  let html = `
+    <div class="customer-header">
+      <h2>${escapeHtml(c.name)}${c.location ? ` <span style="font-weight:400;font-size:0.9rem;color:var(--text-light);">· ${escapeHtml(c.location)}</span>` : ''}</h2>
+      <div class="actions-row">
+        <button class="btn btn-sm btn-primary" onclick="showEditCustomerModal('${c.id}')">Bearbeiten</button>
+        <button class="btn btn-sm btn-danger" onclick="confirmDeleteCustomer('${c.id}','${escapeHtml(c.name)}')">Löschen</button>
+        <button class="btn btn-sm btn-primary" onclick="showReservationModal(null,'${c.id}')" style="background:#1565C0;">+ Reservierung</button>
+      </div>
+    </div>
+    <div class="summary-cards">
+      <div class="summary-card"><div class="num">${total}</div><div class="label">Reserviert</div></div>
+      <div class="summary-card"><div class="num">${delivered}</div><div class="label">Geliefert</div></div>
+      <div class="summary-card"><div class="num">${remaining}</div><div class="label">Offen</div></div>
+      <div class="summary-card"><div class="num">${pct}%</div><div class="label">Erledigt</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div style="font-weight:700;font-size:1.05rem;margin-bottom:10px;">Lieferkosten</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input type="number" id="deliveryCostInput" min="0" step="0.01" value="${Number(c.deliveryCost) || 0}" style="flex:1;min-width:100px;padding:8px 10px;border:2px solid var(--border);border-radius:8px;font-size:1rem;">
+        <span style="font-weight:700;font-size:1.1rem;">€</span>
+        <button class="btn btn-sm btn-primary" onclick="saveDeliveryCost('${c.id}')">Speichern</button>
+      </div>
+    </div>
+  `;
+
+  const years = [...new Set(res.map(r => r.year))].sort((a, b) => a - b);
+
+  if (years.length === 0) {
+    html += `<div style="text-align:center;padding:20px;color:var(--text-light);font-size:0.9rem;">Keine Reservierungen · <a href="#" onclick="event.preventDefault();showReservationModal(null,'${customerId}','schnitt1')" style="color:var(--primary);font-weight:600;">erste anlegen</a></div>`;
+  } else {
+    years.forEach(year => {
+      const yearRes = res.filter(r => r.year === year);
+      html += `<div class="year-section">`;
+      html += `<div class="year-header">${year}${year < CURRENT_YEAR ? ' <span class="vorjahr">(Vorjahr)</span>' : ''}</div>`;
+
+      TYPES.forEach(type => {
+        const typeRes = yearRes.filter(r => r.type === type.id).sort((a, b) => a.size - b.size);
+        if (typeRes.length === 0) return;
+        html += `<div class="reservation-group">`;
+        html += `<div class="group-header ${type.id}">${type.label}</div>`;
+        typeRes.forEach(r => {
+          const color = type.id === 'schnitt1' ? SIZE_COLORS[r.size] : TYPE_COLORS[type.id];
+          const rem = r.total - r.delivered;
+          html += `
+            <div class="reservation-row">
+              <span class="size-dot" style="background:${color}"></span>
+              <div class="info">
+                <div class="size-label">${formatSize(r.size)}</div>
+                <div class="counts">Gesamt: <strong>${r.total}</strong> · Geliefert: <strong>${r.delivered}</strong> · Offen: <strong>${rem}</strong></div>
+              </div>
+              <div class="delivery-actions">
+                <button class="btn btn-icon btn-deliver-minus" onclick="decrementDelivered('${r.id}')" ${r.delivered <= 0 ? 'disabled style="opacity:0.4"' : ''}>−</button>
+                <span class="count-badge">${r.total - r.delivered}</span>
+                <button class="btn btn-icon btn-deliver" onclick="incrementDelivered('${r.id}')" ${r.delivered >= r.total ? 'disabled style="opacity:0.4"' : ''}>+</button>
+              </div>
+              <div class="row-actions">
+                <button class="btn btn-sm" onclick="showReservationModal('${r.id}')">Bearbeiten</button>
+                <button class="btn btn-sm btn-danger" onclick="confirmDeleteReservation('${r.id}')">Löschen</button>
+              </div>
+            </div>
+          `;
+          if (r.deliveryLog && r.deliveryLog.length > 0) {
+            html += `<div style="padding:4px 12px 8px 48px;font-size:0.72rem;color:var(--text-light);">`;
+            html += `<div style="font-weight:600;margin-bottom:4px;">Lieferverlauf</div>`;
+            html += r.deliveryLog.slice().reverse().map(l => {
+              const d = new Date(l.date);
+              const dateStr = d.toLocaleDateString('de-DE', {day:'2-digit',month:'2-digit',year:'numeric'});
+              const amtStr = l.amount < 0 ? '- ' + Math.abs(l.amount) : l.amount;
+              return `<div style="display:flex;justify-content:space-between;padding:2px 0;"><span>${dateStr}</span><span style="font-weight:600;color:var(--primary)">${amtStr}</span></div>`;
+            }).join('');
+            html += `</div>`;
+          }
+        });
+        html += `<button class="add-res-btn" onclick="showReservationModal(null,'${customerId}','${type.id}','${year}')">+ Reservierung</button>`;
+        html += `</div>`;
+      });
+
+      html += `</div>`;
+    });
+  }
+
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+function renderLagerhalle() {
+  document.getElementById('appTitle').textContent = isMobile() ? 'Lagerhalle' : 'HofBese';
+  document.getElementById('backBtn').style.display = 'none';
+  if (!state.hallSlots) state.hallSlots = {};
+
+  const totalSlots = 10 * 32;
+  const occupiedSlots = Object.keys(state.hallSlots).length;
+  const totalRolls = Object.values(state.hallSlots).reduce((sum, s) => sum + (s.rolls || []).length, 0);
+  const freeSlots = totalSlots - occupiedSlots;
+  const futtertischRolls = (state.hallSlots['futtertisch'] || { rolls: [] }).rolls.length;
+
+  let html = `<div class="halle-container">`;
+  html += `<div class="halle-stats">
+    <div class="halle-stat"><div class="num">${totalRolls}</div><div class="label">Rollen</div></div>
+    <div class="halle-stat"><div class="num">${occupiedSlots}</div><div class="label">Belegt</div></div>
+    <div class="halle-stat"><div class="num">${freeSlots}</div><div class="label">Frei</div></div>
+    <div class="halle-stat"><div class="num">${futtertischRolls}</div><div class="label">Futtertisch</div></div>
+  </div>`;
+
+  const allBoxNames = ['Box 1', 'Box 2', 'Box 3', 'Box 4', 'Box 5', 'Box 6', 'Box 7', 'Box 8', 'Box 9', 'Box 10'];
+
+  html += `<div class="halle-layout">`;
+  html += `<div class="halle-row">`;
+  for (let b = 0; b < 5; b++) {
+    html += renderBox(allBoxNames[b], b);
+  }
+  html += `</div>`;
+
+  html += renderFuttertisch();
+
+  html += `<div class="halle-row">`;
+  for (let b = 5; b < 10; b++) {
+    html += renderBox(allBoxNames[b], b);
+  }
+  html += `</div>`;
+
+  html += `</div></div>`;
+  document.getElementById('mainContent').innerHTML = html;
+}
+
+function renderFuttertisch() {
+  const ft = state.hallSlots['futtertisch'] || { rolls: [] };
+  const hasRolls = ft.rolls.length > 0;
+  let ftColor = '';
+  if (hasRolls) {
+    const topRoll = ft.rolls[ft.rolls.length - 1];
+    ftColor = topRoll.type === 'schnitt1' ? (SIZE_COLORS[topRoll.size] || '#555') : (TYPE_COLORS[topRoll.type] || '#555');
+  }
+  let html = `<div class="halle-futtertisch${hasRolls ? ' has-rolls' : ''}" style="${hasRolls && ftColor ? 'border-color:' + ftColor + ';background:' + ftColor + '22;' : ''}" onclick="showFuttertischModal()">`;
+  html += `<div style="font-weight:700;font-size:0.85rem;">Futtertisch</div>`;
+  if (hasRolls) {
+    html += `<div style="font-size:1.4rem;font-weight:700;margin-top:2px;">${ft.rolls.length}</div>`;
+    html += `<div style="font-size:0.65rem;opacity:0.7;">Rollen</div>`;
+  } else {
+    html += `<div style="font-size:0.7rem;opacity:0.6;margin-top:2px;">Tippen zum Belegen</div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
+function renderBox(name, boxIndex) {
+  let html = `<div class="halle-box">`;
+  html += `<div class="halle-box-header">${name}</div>`;
+  html += `<div class="slot-grid">`;
+  for (let s = 0; s < 32; s++) {
+    const slotKey = `box${boxIndex}_slot${s}`;
+    const slot = state.hallSlots[slotKey] || { rolls: [] };
+    const hasRolls = slot.rolls.length > 0;
+    let slotColor = '';
+    if (hasRolls) {
+      const topRoll = slot.rolls[slot.rolls.length - 1];
+      slotColor = topRoll.type === 'schnitt1' ? (SIZE_COLORS[topRoll.size] || '#555') : (TYPE_COLORS[topRoll.type] || '#555');
+    }
+    html += `<div class="slot-cell${hasRolls ? ' has-rolls' : ''}" style="${hasRolls && slotColor ? 'border-color:' + slotColor + ';background:' + slotColor + '55;' : ''}" onclick="showSlotModal('${slotKey}', ${boxIndex}, ${s})">`;
+    if (hasRolls) {
+      html += `<div class="roll-count" style="color:#000">${slot.rolls.length}</div>`;
+    }
+    html += `</div>`;
+  }
+  html += `</div></div>`;
+  return html;
+}
+
+function showSlotModal(slotKey, boxIndex, slotIndex) {
+  if (!state.hallSlots[slotKey]) state.hallSlots[slotKey] = { rolls: [] };
+  const slot = state.hallSlots[slotKey];
+  const rolls = slot.rolls || [];
+  const maxRolls = 4;
+
+  let html = `<h3>Slot</h3>`;
+  html += `<div style="font-size:0.85rem;color:var(--text-light);margin-bottom:12px;">${rolls.length}/${maxRolls} Rollen belegt</div>`;
+
+  if (rolls.length > 0) {
+    html += `<div style="margin-bottom:16px;">`;
+    rolls.forEach((r, i) => {
+      const typeLabel = TYPES.find(t => t.id === r.type)?.label || r.type;
+      const color = r.type === 'schnitt1' ? (SIZE_COLORS[r.size] || '#555') : (TYPE_COLORS[r.type] || '#555');
+      html += `<div style="display:flex;align-items:center;gap:8px;padding:8px;background:#f5f5f5;border-radius:6px;margin-bottom:4px;">`;
+      html += `<div style="width:24px;height:14px;border-radius:4px;background:${color};border:1px solid rgba(0,0,0,0.15);"></div>`;
+      html += `<div style="flex:1;font-size:0.85rem;">`;
+      html += `<div style="font-weight:600;">${typeLabel}${r.size ? ' · ' + formatSize(r.size) : ''}</div>`;
+      html += `</div>`;
+      html += `<button class="btn btn-sm btn-danger" onclick="removeRollFromSlot('${slotKey}', ${i})">×</button>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (rolls.length < maxRolls) {
+    const available = maxRolls - rolls.length;
+    html += `<div style="font-weight:600;margin-bottom:8px;">Rollen hinzufügen:</div>`;
+    html += `<div class="form-group"><label>Typ</label><select id="slotRollType">${TYPES.map(t => `<option value="${t.id}">${t.label}</option>`).join('')}</select></div>`;
+    html += `<div class="form-group"><label>Größe</label><select id="slotRollSize">${SIZES.map(s => `<option value="${s}">${formatSize(s)}</option>`).join('')}</select></div>`;
+    html += `<div class="form-group"><label>Anzahl (max ${available})</label><input type="number" id="slotRollQty" min="1" max="${available}" value="1"></div>`;
+    html += `<button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="addRollToSlot('${slotKey}')">+ Hinzufügen</button>`;
+  } else {
+    html += `<div style="text-align:center;padding:12px;background:#fff3e0;border-radius:8px;color:#e65100;font-weight:600;">Maximale Belegung erreicht</div>`;
+  }
+
+  html += `<div class="btn-row" style="margin-top:16px;"><button class="btn" onclick="closeModal()">Schließen</button></div>`;
+  showModal(html);
+}
+
+function addRollToSlot(slotKey) {
+  if (!state.hallSlots[slotKey]) state.hallSlots[slotKey] = { rolls: [] };
+  const slot = state.hallSlots[slotKey];
+  const qty = parseInt(document.getElementById('slotRollQty').value) || 1;
+  const available = 4 - slot.rolls.length;
+  const addCount = Math.min(qty, available);
+  if (addCount < 1) { showToast('Kein Platz mehr'); return; }
+  const type = document.getElementById('slotRollType').value;
+  const size = parseFloat(document.getElementById('slotRollSize').value);
+  for (let i = 0; i < addCount; i++) {
+    slot.rolls.push({ type, size });
+  }
+  saveData(); closeModal(); renderLagerhalle(); showToast(addCount + ' Rolle(n) hinzugefügt');
+}
+
+function removeRollFromSlot(slotKey, rollIndex) {
+  if (!state.hallSlots[slotKey]) return;
+  state.hallSlots[slotKey].rolls.splice(rollIndex, 1);
+  if (state.hallSlots[slotKey].rolls.length === 0) delete state.hallSlots[slotKey];
+  saveData(); closeModal(); renderLagerhalle(); showToast('Rolle entfernt');
+}
+
+function showFuttertischModal() {
+  if (!state.hallSlots['futtertisch']) state.hallSlots['futtertisch'] = { rolls: [] };
+  const ft = state.hallSlots['futtertisch'];
+  const rolls = ft.rolls || [];
+
+  let html = `<h3>Futtertisch</h3>`;
+  html += `<div style="font-size:0.85rem;color:var(--text-light);margin-bottom:12px;">${rolls.length} Rollen</div>`;
+
+  if (rolls.length > 0) {
+    html += `<div style="margin-bottom:16px;max-height:300px;overflow-y:auto;">`;
+    rolls.forEach((r, i) => {
+      const typeLabel = TYPES.find(t => t.id === r.type)?.label || r.type;
+      const color = r.type === 'schnitt1' ? (SIZE_COLORS[r.size] || '#555') : (TYPE_COLORS[r.type] || '#555');
+      html += `<div style="display:flex;align-items:center;gap:8px;padding:8px;background:#f5f5f5;border-radius:6px;margin-bottom:4px;">`;
+      html += `<div style="width:24px;height:14px;border-radius:4px;background:${color};border:1px solid rgba(0,0,0,0.15);"></div>`;
+      html += `<div style="flex:1;font-size:0.85rem;">`;
+      html += `<div style="font-weight:600;">${typeLabel}${r.size ? ' · ' + formatSize(r.size) : ''}</div>`;
+      html += `</div>`;
+      html += `<button class="btn btn-sm btn-danger" onclick="removeFuttertischRoll(${i})">×</button>`;
+      html += `</div>`;
+    });
+    html += `</div>`;
+  }
+
+  html += `<div style="font-weight:600;margin-bottom:8px;">Rollen hinzufügen:</div>`;
+  html += `<div class="form-group"><label>Typ</label><select id="ftRollType">${TYPES.map(t => `<option value="${t.id}">${t.label}</option>`).join('')}</select></div>`;
+  html += `<div class="form-group"><label>Größe</label><select id="ftRollSize">${SIZES.map(s => `<option value="${s}">${formatSize(s)}</option>`).join('')}</select></div>`;
+  html += `<div class="form-group"><label>Anzahl</label><input type="number" id="ftRollQty" min="1" value="1"></div>`;
+  html += `<button class="btn btn-primary" style="width:100%;margin-top:8px;" onclick="addFuttertischRoll()">+ Hinzufügen</button>`;
+
+  html += `<div class="btn-row" style="margin-top:16px;"><button class="btn" onclick="closeModal()">Schließen</button></div>`;
+  showModal(html);
+}
+
+function addFuttertischRoll() {
+  if (!state.hallSlots['futtertisch']) state.hallSlots['futtertisch'] = { rolls: [] };
+  const ft = state.hallSlots['futtertisch'];
+  const qty = parseInt(document.getElementById('ftRollQty').value) || 1;
+  if (qty < 1) { showToast('Mindestens 1 Rolle'); return; }
+  const type = document.getElementById('ftRollType').value;
+  const size = parseFloat(document.getElementById('ftRollSize').value);
+  for (let i = 0; i < qty; i++) {
+    ft.rolls.push({ type, size });
+  }
+  saveData(); closeModal(); renderLagerhalle(); showToast(qty + ' Rolle(n) zum Futtertisch hinzugefügt');
+}
+
+function removeFuttertischRoll(index) {
+  if (!state.hallSlots['futtertisch']) return;
+  state.hallSlots['futtertisch'].rolls.splice(index, 1);
+  if (state.hallSlots['futtertisch'].rolls.length === 0) delete state.hallSlots['futtertisch'];
+  saveData(); closeModal(); renderLagerhalle(); showToast('Rolle entfernt');
+}
+
+// ============ WIZARD (neuer Kunde + Reservierung) ============
+function showNewCustomerWizard() {
+  wiz = { step: 1, name: '', location: '', type: null, size: null, quantity: '', year: CURRENT_YEAR };
+  renderWizard();
+}
+
+function renderWizard() {
+  let html = `<h3>Neuen Kunden anlegen</h3><div class="wiz-step">Schritt ${wiz.step} von 4</div>`;
+  switch (wiz.step) {
+    case 1: html += wizStep1(); break;
+    case 2: html += wizStep2(); break;
+    case 3: html += wizStep3(); break;
+    case 4: html += wizStep4(); break;
+  }
+  showModal(html);
+  if (wiz.step === 1) setTimeout(() => document.getElementById('wizName')?.focus(), 100);
+  if (wiz.step === 4) setTimeout(() => document.getElementById('wizQty')?.focus(), 100);
+}
+
+function wizStep1() {
+  return `
+    <div class="form-group">
+      <label for="wizName">Kundenname</label>
+      <input type="text" id="wizName" value="${escapeHtml(wiz.name)}" placeholder="Name eingeben..." autofocus onkeydown="if(event.key==='Enter')wizNext1()">
+    </div>
+    <div class="form-group">
+      <label for="wizLocation">Lieferort (optional)</label>
+      <input type="text" id="wizLocation" value="${escapeHtml(wiz.location)}" placeholder="Ort eingeben..." onkeydown="if(event.key==='Enter')wizNext1()">
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="closeModal()">Abbrechen</button>
+      <button class="btn btn-primary" onclick="wizNext1()">Weiter</button>
+    </div>
+  `;
+}
+function wizNext1() {
+  const name = document.getElementById('wizName').value.trim();
+  if (!name) { showToast('Bitte Namen eingeben'); return; }
+  wiz.name = name; wiz.location = document.getElementById('wizLocation').value.trim(); wiz.step = 2; renderWizard();
+}
+
+function wizStep2() {
+  const btn = (id, label, color) =>
+    `<button class="wiz-option${wiz.type === id ? ' selected' : ''}" onclick="wizSelectType('${id}')">
+      ${color ? `<span class="dot" style="background:${color}"></span>` : ''}${label}
+    </button>`;
+  return `
+    <div style="margin-bottom:12px;font-weight:600;">Typ wählen:</div>
+    <div class="wiz-options">
+      ${btn('schnitt1', '1. Schnitt')}
+      ${btn('schnitt2', '2. Schnitt', TYPE_COLORS.schnitt2)}
+      ${btn('stroh', 'Stroh', TYPE_COLORS.stroh)}
+      ${btn('naturschutz', 'Naturschutz', TYPE_COLORS.naturschutz)}
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="wizBack()">Zurück</button>
+      <button class="btn btn-primary" onclick="wizNext2()">Weiter</button>
+    </div>
+  `;
+}
+function wizSelectType(id) { wiz.type = id; renderWizard(); }
+function wizNext2() {
+  if (!wiz.type) { showToast('Bitte einen Typ wählen'); return; }
+  wiz.step = 3; renderWizard();
+}
+
+function wizStep3() {
+  let btns = SIZES.map(s => {
+    const color = wiz.type === 'schnitt1' ? SIZE_COLORS[s] : TYPE_COLORS[wiz.type];
+    return `<button class="wiz-option${wiz.size === s ? ' selected' : ''}" onclick="wizSelectSize(${s})" style="justify-content:center;">
+      <span class="dot" style="background:${color};width:16px;height:16px;"></span>${formatSize(s)}
+    </button>`;
+  }).join('');
+  return `
+    <div style="margin-bottom:12px;font-weight:600;">Größe wählen:</div>
+    <div class="wiz-grid">${btns}</div>
+    <div class="btn-row">
+      <button class="btn" onclick="wizBack()">Zurück</button>
+      <button class="btn btn-primary" onclick="wizNext3()">Weiter</button>
+    </div>
+  `;
+}
+function wizSelectSize(s) { wiz.size = s; renderWizard(); }
+function wizNext3() {
+  if (!wiz.size) { showToast('Bitte eine Größe wählen'); return; }
+  wiz.step = 4; renderWizard();
+}
+
+function wizStep4() {
+  const color = wiz.type === 'schnitt1' ? SIZE_COLORS[wiz.size] : TYPE_COLORS[wiz.type];
+  const typeLabel = TYPES.find(t => t.id === wiz.type)?.label || wiz.type;
+  return `
+    <div class="form-row">
+      <div class="form-group">
+        <label for="wizYear">Jahr</label>
+        <select id="wizYear" disabled style="opacity:0.7;cursor:not-allowed;">${yearOptions(CURRENT_YEAR)}</select><input type="hidden" id="wizYearHidden" value="${CURRENT_YEAR}">
+      </div>
+      <div class="form-group">
+        <label for="wizQty">Menge (Rollen)</label>
+        <input type="number" id="wizQty" min="1" value="${wiz.quantity}" placeholder="Anzahl" onkeydown="if(event.key==='Enter')wizSave()">
+      </div>
+    </div>
+    <div style="background:#f5f5f5;border-radius:8px;padding:14px;margin-bottom:8px;">
+      <div style="font-weight:600;margin-bottom:8px;">Zusammenfassung</div>
+      <div style="display:flex;flex-direction:column;gap:4px;font-size:0.9rem;">
+        <div><span style="color:var(--text-light);">Kunde:</span> ${escapeHtml(wiz.name)}${wiz.location ? ` (${escapeHtml(wiz.location)})` : ''}</div>
+        <div><span style="color:var(--text-light);">Typ:</span> ${typeLabel}</div>
+        <div><span style="color:var(--text-light);">Größe:</span> <span class="size-dot" style="display:inline-block;width:14px;height:14px;background:${color};vertical-align:middle;"></span> ${formatSize(wiz.size)}</div>
+        <div><span style="color:var(--text-light);">Jahr:</span> ${wiz.year}</div>
+        <div style="font-weight:700;font-size:1.1rem;margin-top:4px;"><span style="color:var(--text-light);font-weight:400;">Menge:</span> ${wiz.quantity || '—'} Rollen</div>
+      </div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="wizBack()">Zurück</button>
+      <button class="btn btn-primary" onclick="wizSave()">Speichern</button>
+    </div>
+  `;
+}
+
+function wizBack() { if (wiz.step > 1) { wiz.step--; renderWizard(); } }
+
+function wizSave() {
+  const qty = parseInt(document.getElementById('wizQty')?.value);
+  if (!qty || qty < 1) { showToast('Bitte gültige Menge eingeben'); return; }
+  wiz.quantity = qty;
+  wiz.year = parseInt(document.getElementById('wizYearHidden')?.value) || CURRENT_YEAR;
+  const c = addCustomer(wiz.name, wiz.location);
+  addReservation(c.id, wiz.type, wiz.size, qty, 0, wiz.year);
+  closeModal();
+  state.currentCustomerId = c.id;
+  renderAll();
+  showToast('Kunde mit Reservierung angelegt');
+}
+
+// ============ MODALS ============
+function showEditCustomerModal(customerId) {
+  const c = state.customers.find(x => x.id === customerId);
+  if (!c) return;
+  showModal(`
+    <h3>Kunde bearbeiten</h3>
+    <div class="form-group">
+      <label for="custName">Kundenname</label>
+      <input type="text" id="custName" value="${escapeHtml(c.name)}" placeholder="Name eingeben..." autofocus>
+    </div>
+    <div class="form-group">
+      <label for="custLocation">Lieferort</label>
+      <input type="text" id="custLocation" value="${escapeHtml(c.location || '')}" placeholder="Ort eingeben...">
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="closeModal()">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveEditCustomerModal('${c.id}')">Speichern</button>
+    </div>
+  `);
+  setTimeout(() => document.getElementById('custName')?.focus(), 100);
+}
+function saveEditCustomerModal(id) {
+  const name = document.getElementById('custName').value.trim();
+  const location = document.getElementById('custLocation').value.trim();
+  if (!name) { showToast('Bitte Namen eingeben'); return; }
+  updateCustomer(id, name, location); closeModal(); renderAll(); showToast('Kunde gespeichert');
+}
+
+function showReservationModal(reservationId, customerId, preType, preYear) {
+  const r = reservationId ? state.reservations.find(x => x.id === reservationId) : null;
+  const title = r ? 'Reservierung bearbeiten' : 'Neue Reservierung';
+  const type = r ? r.type : (preType || 'schnitt1');
+  const size = r ? r.size : 1.2;
+  const total = r ? r.total : '';
+  const delivered = r ? r.delivered : 0;
+  const year = r ? r.year : (preYear ? Number(preYear) : CURRENT_YEAR);
+  const cid = r ? r.customerId : customerId;
+
+  const typeOptions = TYPES.map(t =>
+    `<option value="${t.id}" ${t.id === type ? 'selected' : ''}>${t.label}</option>`
+  ).join('');
+  const sizeOptions = SIZES.map(s =>
+    `<option value="${s}" ${s === size ? 'selected' : ''}>${formatSize(s)}</option>`
+  ).join('');
+
+  showModal(`
+    <h3>${title}</h3>
+    <div class="form-group">
+      <label for="resType">Typ</label>
+      <select id="resType">${typeOptions}</select>
+    </div>
+    <div class="form-group">
+      <label for="resSize">Größe</label>
+      <select id="resSize">${sizeOptions}</select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label for="resTotal">Gesamtanzahl</label>
+        <input type="number" id="resTotal" min="1" value="${total}" placeholder="Anzahl">
+      </div>
+      <div class="form-group">
+        <label for="resDelivered">Bereits geliefert</label>
+        <input type="number" id="resDelivered" min="0" value="${delivered}">
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="resYear">Jahr</label>
+      <select id="resYear">${yearOptions(year)}</select>
+    </div>
+    <div class="btn-row">
+      <button class="btn" onclick="closeModal()">Abbrechen</button>
+      <button class="btn btn-primary" onclick="saveReservationModal('${r ? r.id : ''}','${cid}')">Speichern</button>
+    </div>
+  `);
+}
+
+function saveReservationModal(reservationId, customerId) {
+  const type = document.getElementById('resType').value;
+  const size = Number(document.getElementById('resSize').value);
+  const total = Number(document.getElementById('resTotal').value);
+  const delivered = Number(document.getElementById('resDelivered').value) || 0;
+  const year = Number(document.getElementById('resYear').value) || CURRENT_YEAR;
+  if (!total || total < 1) { showToast('Bitte gültige Gesamtanzahl eingeben'); return; }
+  if (delivered > total) { showToast('Geliefert kann nicht größer als Gesamt sein'); return; }
+  if (reservationId) { updateReservation(reservationId, { type, size, total, delivered, year }); }
+  else { addReservation(customerId, type, size, total, delivered, year); }
+  closeModal(); renderAll(); showToast('Reservierung gespeichert');
+}
+
+function confirmDeleteCustomer(id, name) {
+  showModal(`
+    <h3>Kunde löschen</h3>
+    <p style="margin-bottom:16px">Kunden <strong>${escapeHtml(name)}</strong> und alle zugehörigen Reservierungen löschen?</p>
+    <div class="btn-row">
+      <button class="btn" onclick="closeModal()">Abbrechen</button>
+      <button class="btn btn-danger" onclick="doDeleteCustomer('${id}')">Löschen</button>
+    </div>
+  `);
+}
+function doDeleteCustomer(id) { deleteCustomer(id); closeModal(); renderAll(); showToast('Kunde gelöscht'); }
+
+function confirmDeleteReservation(id) {
+  showModal(`
+    <h3>Reservierung löschen</h3>
+    <p style="margin-bottom:16px">Diese Reservierung wirklich löschen?</p>
+    <div class="btn-row">
+      <button class="btn" onclick="closeModal()">Abbrechen</button>
+      <button class="btn btn-danger" onclick="doDeleteReservation('${id}')">Löschen</button>
+    </div>
+  `);
+}
+function doDeleteReservation(id) { deleteReservation(id); closeModal(); renderAll(); showToast('Reservierung gelöscht'); }
+
+// ============ MODAL HELPERS ============
+function showModal(html) {
+  document.getElementById('modalContent').innerHTML = html;
+  document.getElementById('modalOverlay').classList.add('active');
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('active');
+  if (_showingSyncModal) {
+    _showingSyncModal = false;
+    fetch('/api/sync-decline', { method: 'POST' }).catch(() => {});
+  }
+}
+
+// ============ TOAST ============
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(el._timeout); el._timeout = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+// ============ NAVIGATION ============
+function isMobile() { return window.innerWidth < 768; }
+function updateMobileView() {
+  if (isMobile()) {
+    const showKundenDetail = state.currentTab === 'kunden' && !!state.currentCustomerId;
+    document.getElementById('backBtn').style.display = showKundenDetail ? 'block' : 'none';
+    if (state.currentTab === 'lagerhalle') document.getElementById('appTitle').textContent = 'Lagerhalle';
+    else if (showKundenDetail) document.getElementById('appTitle').textContent = state.customers.find(c => c.id === state.currentCustomerId)?.name || 'HofBese';
+    else document.getElementById('appTitle').textContent = 'HofBese';
+  } else {
+    document.getElementById('backBtn').style.display = 'none';
+    document.getElementById('appTitle').textContent = 'HofBese';
+  }
+}
+function switchTab(tab) { state.currentTab = tab; state.currentCustomerId = null; renderAll(); }
+function selectCustomer(id) { state.currentCustomerId = id; renderAll(); }
+function showCustomerList() { state.currentCustomerId = null; renderAll(); }
+
+// ============ EXPORT / IMPORT ============
+function exportData() {
+  const data = JSON.stringify({ customers: state.customers, reservations: state.reservations, hallSlots: state.hallSlots }, null, 2);
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `heubestellung_${new Date().toISOString().slice(0,10)}.json`;
+  a.click(); URL.revokeObjectURL(url); showToast('Daten exportiert');
+}
+function importData() { document.getElementById('importFileInput').click(); }
+function handleImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.customers) throw new Error('Ungültiges Format');
+      state.customers = (data.customers || []).map(c => { if (!c.location) c.location = ''; if (c.deliveryCost === undefined) c.deliveryCost = 0; return c; });
+      state.reservations = (data.reservations || []).map(r => { if (!r.year) r.year = CURRENT_YEAR; return r; });
+      state.hallSlots = data.hallSlots || {};
+      state.currentCustomerId = null;
+      saveData(); renderAll(); showToast('Daten importiert');
+    } catch(err) { showToast('Fehler: ' + err.message); }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+function restoreBackup() {
+  try {
+    const raw = localStorage.getItem('heubestellung_backup');
+    if (!raw) { showToast('Keine Sicherung vorhanden'); return; }
+    const data = JSON.parse(raw);
+    if (!data.customers) throw new Error('Ungültig');
+    state.customers = (data.customers || []).map(c => { if (!c.location) c.location = ''; if (c.deliveryCost === undefined) c.deliveryCost = 0; return c; });
+    state.reservations = (data.reservations || []).map(r => { if (!r.year) r.year = CURRENT_YEAR; return r; });
+    state.hallSlots = data.hallSlots || {};
+    state.currentCustomerId = null;
+    saveData(); renderAll(); showToast('Sicherung wiederhergestellt');
+  } catch(e) { showToast('Fehler: ' + e.message); }
+}
+
+function importReservationsOnly() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data.reservations) throw new Error('Keine Reservierungen in Datei');
+        const existingIds = new Set(state.reservations.map(r => r.id));
+        let count = 0;
+        data.reservations.forEach(r => {
+          if (!existingIds.has(r.id)) {
+            if (!r.year) r.year = CURRENT_YEAR;
+            state.reservations.push(r);
+            count++;
+          }
+        });
+        saveData(); renderAll();
+        showToast(count + ' neue Reservierungen importiert');
+      } catch(err) { showToast('Fehler: ' + err.message); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// ============ BACKUP-ORDNER (File System Access API) ============
+let backupHandle = null;
+
+function openCfgDB() {
+  return new Promise((resolve, reject) => {
+    const r = indexedDB.open('heubestellung_cfg', 1);
+    r.onupgradeneeded = () => { if (!r.result.objectStoreNames.contains('kv')) r.result.createObjectStore('kv'); };
+    r.onsuccess = () => resolve(r.result);
+    r.onerror = () => reject(r.error);
+  });
+}
+async function loadBackupHandle() {
+  try { const db = await openCfgDB(); return new Promise((res, rej) => { const tx = db.transaction('kv','readonly'); const r = tx.objectStore('kv').get('backupDir'); r.onsuccess = () => { res(r.result || null); db.close(); }; r.onerror = () => { rej(r.error); db.close(); }; }); } catch(e) { return null; }
+}
+async function saveBackupHandle(h) {
+  try { const db = await openCfgDB(); return new Promise((res, rej) => { const tx = db.transaction('kv','readwrite'); const r = tx.objectStore('kv').put(h, 'backupDir'); r.onsuccess = () => { res(); db.close(); }; r.onerror = () => { rej(r.error); db.close(); }; }); } catch(e) {}
+}
+async function setBackupFolder() {
+  try {
+    const h = await window.showDirectoryPicker({ mode: 'readwrite' });
+    backupHandle = h; await saveBackupHandle(h);
+    showToast('Backup-Ordner gesetzt'); renderSidebar();
+  } catch(e) { if (e.name !== 'AbortError') showToast('Fehler'); }
+}
+async function exportToBackupFolder() {
+  if (!window.showDirectoryPicker) {
+    const jsonData = JSON.stringify({customers:state.customers,reservations:state.reservations,fields:state.fields,workLogs:state.workLogs,harvests:state.harvests,hallSlots:state.hallSlots}, null, 2);
+    const bytes = new TextEncoder().encode(jsonData);
+    let bin = '';
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    const b64 = btoa(bin);
+    const backupDir = 'C:\\Users\\cbese\\Desktop\\heubestellung\\Backup Dateien';
+    const psCmd = `powershell -ExecutionPolicy Bypass -Command "$b64='${b64}';$bytes=[System.Convert]::FromBase64String($b64);$json=[System.Text.Encoding]::UTF8.GetString($bytes);$dir='${backupDir}';if(!(Test-Path $dir -ErrorAction SilentlyContinue)){New-Item -ItemType Directory -Path $dir -Force};$file=Join-Path $dir ('heubestellung_'+((Get-Date).ToString('yyyy-MM-dd'))+'.json');[System.IO.File]::WriteAllText($file,$json);Write-Host ('Gespeichert: '+$file);Read-Host 'Druecke Enter'"`;
+    const blob = new Blob(['@echo off\r\nchcp 65001 >nul\r\n' + psCmd], {type:'application/bat'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `Heu-Export_${new Date().toISOString().slice(0,10)}.bat`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    localStorage.setItem('heubestellung_export_ver', String(_dataVersion));
+    showToast('Batch-Datei erstellt → speichern und doppelklicken');
+    renderSidebar();
+    return;
+  }
+  if (!backupHandle) {
+    try {
+      const h = await window.showDirectoryPicker({ mode: 'readwrite' });
+      backupHandle = h; await saveBackupHandle(h);
+      renderSidebar();
+    } catch(e) { if (e.name !== 'AbortError') showToast('Ordner-Auswahl fehlgeschlagen'); return; }
+  }
+  if (backupHandle) {
+    try {
+      if ((await backupHandle.queryPermission({mode:'readwrite'})) !== 'granted')
+        await backupHandle.requestPermission({mode:'readwrite'});
+    } catch(e) {}
+  }
+  try {
+    await saveBackupToFolder();
+    localStorage.setItem('heubestellung_export_ver', String(_dataVersion));
+    showToast('Exportiert: Backup Dateien');
+    renderSidebar();
+  } catch(e) {
+    exportData();
+    showToast('Ordner-Export fehlgeschlagen – Datei wurde heruntergeladen');
+  }
+}
+async function saveBackupToFolder() {
+  if (!backupHandle) throw new Error('Kein Backup-Ordner');
+  const perm = await backupHandle.queryPermission({mode:'readwrite'});
+  if (perm !== 'granted') throw new Error('Berechtigung fehlt – bitte 1× "Exportieren" klicken');
+  const fh = await backupHandle.getFileHandle(`heubestellung_${new Date().toISOString().slice(0,10)}.json`, {create:true});
+  const w = await fh.createWritable({keepExistingData:false});
+  await w.write(JSON.stringify({customers:state.customers,reservations:state.reservations,fields:state.fields,workLogs:state.workLogs,harvests:state.harvests,hallSlots:state.hallSlots},null,2));
+  await w.close();
+}
+async function loadAndRestoreBackup() {
+  if (!backupHandle) return;
+  try {
+    if ((await backupHandle.queryPermission({mode:'read'})) !== 'granted')
+      if ((await backupHandle.requestPermission({mode:'read'})) !== 'granted') return;
+    const entries = []; for await (const e of backupHandle.values()) entries.push(e);
+    const backups = entries.filter(e => e.kind === 'file' && e.name.startsWith('heubestellung_') && e.name.endsWith('.json')).sort((a, b) => b.name.localeCompare(a.name));
+    if (backups.length === 0) { showToast('Keine Backup-Dateien gefunden'); return; }
+    const file = await backups[0].getFile();
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (!data.customers && !data.fields) { showToast('Ungültige Backup-Datei'); return; }
+    state.customers = (data.customers || []).map(c => { if (!c.location) c.location = ''; if (c.deliveryCost === undefined) c.deliveryCost = 0; return c; });
+    state.reservations = (data.reservations || []).map(r => { if (!r.year) r.year = CURRENT_YEAR; return r; });
+    state.fields = data.fields || [];
+    state.workLogs = data.workLogs || [];
+    state.harvests = data.harvests || [];
+    state.hallSlots = data.hallSlots || {};
+    state.currentCustomerId = null;
+    state.currentFieldId = null;
+    saveData(); renderAll(); showToast('Backup wiederhergestellt: ' + backups[0].name);
+  } catch(e) { showToast('Fehler: ' + e.message); }
+}
+async function refreshBackupPermission() {
+  if (!backupHandle) return;
+  try {
+    const result = await backupHandle.requestPermission({mode:'readwrite'});
+    if (result === 'granted') { showToast('Berechtigung erneuert'); renderSidebar(); }
+    else showToast('Berechtigung verweigert');
+  } catch(e) { showToast('Fehler'); }
+}
+
+// ============ CLOSE CONFIRMATION ============
+let _closeConfirmed = false;
+
+window.addEventListener('beforeunload', function(e) {
+  if (_closeConfirmed) return;
+  try { localStorage.setItem('heubestellung_backup', JSON.stringify({ customers: state.customers, reservations: state.reservations, hallSlots: state.hallSlots })); } catch(e) {}
+  e.preventDefault();
+  e.returnValue = '';
+});
+
+function showSaveOnCloseModal() {
+  showModal('<div style="padding:10px;"><h3 style="margin:0 0 12px;">Änderungen speichern?</h3><p style="color:var(--text-light);font-size:0.85rem;margin-bottom:16px;">Möchtest du die aktuellen Daten im Backup-Ordner speichern?</p><div style="display:flex;gap:10px;"><button class="btn btn-primary" onclick="saveOnClose()" style="flex:1;">Ja, speichern</button><button class="btn" onclick="skipOnClose()" style="flex:1;">Nein</button></div><button onclick="closeModal();_closeConfirmed=false" style="margin-top:10px;width:100%;padding:8px;border:none;background:none;color:var(--text-light);cursor:pointer;">Abbrechen</button></div>');
+}
+
+async function saveOnClose() {
+  _closeConfirmed = true;
+  closeModal();
+  try {
+    if (window.showDirectoryPicker && backupHandle) {
+      await saveBackupToFolder();
+      showToast('Backup gespeichert – Fenster jetzt schließen');
+    } else {
+      exportData();
+    }
+  } catch(e) {
+    exportData();
+  }
+}
+
+function skipOnClose() {
+  _closeConfirmed = true;
+  closeModal();
+  showToast('Nicht gespeichert – Fenster jetzt schließen');
+}
+
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState !== 'hidden') return;
+  try { localStorage.setItem('heubestellung_backup', JSON.stringify({ customers: state.customers, reservations: state.reservations, hallSlots: state.hallSlots })); } catch(e) {}
+  if (backupHandle && _closeConfirmed) saveBackupToFolder().catch(()=>{});
+});
+
+// ============ UNSAVED STATUS ============
+function updateUnsavedBanner() {}
+
+// ============ HELPERS ============
+function formatSize(s) { return s.toString().replace('.', ',') + 'm'; }
+function escapeHtml(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ============ EVENTS ============
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeModal(); });
+window.addEventListener('resize', function() { updateMobileView(); });
+
+// ============ DEFAULT DATA ============
+// ============ DEFAULT DATA ============
+const DEFAULT_DATA = {"customers":[{"id":"mpab1v849ju6nd","name":"Vika","createdAt":1779054393172,"location":"Hordorf","deliveryCost":60},{"id":"mpabgkh2cv4i3n","name":"Bötcher","location":"Schapen","createdAt":1779055079078,"deliveryCost":0},{"id":"mpabhx9xbkk4hb","name":"Rischbieter Laura","location":"Ochsendorf","createdAt":1779055142325,"deliveryCost":0},{"id":"mpabji6swxod7b","name":"Kursave","location":"Lauingen","createdAt":1779055216084,"deliveryCost":0},{"id":"mpabkrcyt845oc","name":"Weber Dörte","location":"Cremlingen","createdAt":1779055274626,"deliveryCost":0},{"id":"mpabmqv0pi33g8","name":"Sommer","location":"Lauingen","createdAt":1779055367292,"deliveryCost":0},{"id":"mpabnryjf3zfqc","name":"Joana","location":"Rotenkamp","createdAt":1779055415371,"deliveryCost":0},{"id":"mpaboji0f3uhwl","name":"Pohanka","location":"","createdAt":1779055451064,"deliveryCost":0},{"id":"mpabp2lykv01s6","name":"Seiler","location":"Emmersedt","createdAt":1779055475830,"deliveryCost":138},{"id":"mpabqb5we1f0jp","name":"Wagner","location":"Rieseberg","createdAt":1779055533572,"deliveryCost":0},{"id":"mpabr9yvutjyrm","name":"Stock","location":"Groß Steinum","createdAt":1779055578679,"deliveryCost":0},{"id":"mpabshmcxbl82f","name":"Scherer","location":"Allenbüttel","createdAt":1779055635252,"deliveryCost":0},{"id":"mpabtafza2c7l6","name":"Kaufmann Karoline","location":"Querum","createdAt":1779055672608,"deliveryCost":0},{"id":"mpabuw3683k3hs","name":"Ballsch","location":"Gliesmarode","createdAt":1779055747314,"deliveryCost":0},{"id":"mpabvtvgkq9y7v","name":"Schmidt GF-er","location":"Gifhorn","createdAt":1779055791100,"deliveryCost":0},{"id":"mpabx595cx8ty9","name":"Wiese","location":"Rieseberg","createdAt":1779055852505,"deliveryCost":0},{"id":"mpabyiw60gff94","name":"Haut","location":"Sunstedt","createdAt":1779055916838,"deliveryCost":80},{"id":"mpac0iiivhdnwm","name":"Lindner","location":"","createdAt":1779056009658,"deliveryCost":0},{"id":"mpac25febdeu4s","name":"Hasselbach","location":"Hordorf","createdAt":1779056086010,"deliveryCost":60},{"id":"mpac2ytudabkqv","name":"Drebenstedt","location":"Mariental","createdAt":1779056124114,"deliveryCost":180},{"id":"mpac47ca13p6fn","name":"Hecker","location":"Dettum","createdAt":1779056181802,"deliveryCost":140},{"id":"mpac5h2273qr40","name":"A. Hagemann","location":"Rotenkamp","createdAt":1779056241050,"deliveryCost":0},{"id":"mpac6qla210rwm","name":"Waldemar","location":"","createdAt":1779056300062,"deliveryCost":0},{"id":"mpac81hsmgse3y","name":"Hasenfuß","location":"Gifhorn Winkel","createdAt":1779056360848,"deliveryCost":150},{"id":"mpac9s3r66iuq0","name":"Günther Denise","location":"Ochsendorf","createdAt":1779056441991,"deliveryCost":0},{"id":"mpacbssu45llug","name":"Bungenstock Julia","location":"Salzdahlum","createdAt":1779056536206,"deliveryCost":120},{"id":"mpacdyzszjzhmr","name":"Poelzig","location":"Schöppenstedt","createdAt":1779056637544,"deliveryCost":0},{"id":"mpacfca0q3jqxw","name":"Job Falko","location":"","createdAt":1779056701416,"deliveryCost":0},{"id":"mpacg8y8hp739k","name":"Fels Sophie","location":"","createdAt":1779056743760,"deliveryCost":0},{"id":"mpach00b58bs3x","name":"Reckewell","location":"Frellstedt","createdAt":1779056778827,"deliveryCost":0},{"id":"mpacia1tglw97d","name":"L.P.","location":"Süpplingen","createdAt":1779056838497,"deliveryCost":0}],"reservations":[{"id":"mpab1v84p4wvr8","customerId":"mpab1v849ju6nd","type":"schnitt1","size":1.4,"total":55,"delivered":0,"year":2026},{"id":"mpab7c9igoobp3","customerId":"mpab1v849ju6nd","type":"schnitt1","size":1.4,"total":50,"delivered":31,"year":2025},{"id":"mpabgkh2de0i42","customerId":"mpabgkh2cv4i3n","type":"schnitt1","size":1.4,"total":11,"delivered":9,"year":2025},{"id":"mpabhx9ymzpz3k","customerId":"mpabhx9xbkk4hb","type":"schnitt1","size":1.4,"total":3,"delivered":3,"year":2025},{"id":"mpabibiaf1aa3f","customerId":"mpabhx9xbkk4hb","type":"schnitt1","size":0.9,"total":11,"delivered":11,"year":2025},{"id":"mpabil2yqsly3m","customerId":"mpabhx9xbkk4hb","type":"schnitt1","size":1.6,"total":4,"delivered":0,"year":2025},{"id":"mpabji6soert9o","customerId":"mpabji6swxod7b","type":"schnitt1","size":0.9,"total":80,"delivered":80,"year":2025},{"id":"mpabkrcyanwn0j","customerId":"mpabkrcyt845oc","type":"schnitt1","size":1.6,"total":9,"delivered":3,"year":2025},{"id":"mpablr1y9knlh3","customerId":"mpabkrcyt845oc","type":"schnitt1","size":1.4,"total":4,"delivered":4,"year":2025},{"id":"mpabmqv0h3yjq2","customerId":"mpabmqv0pi33g8","type":"schnitt1","size":1.4,"total":34,"delivered":12,"year":2025},{"id":"mpabnryk7ix2f4","customerId":"mpabnryjf3zfqc","type":"schnitt1","size":1.4,"total":20,"delivered":18,"year":2025},{"id":"mpaboji09nh3tn","customerId":"mpaboji0f3uhwl","type":"schnitt2","size":1.4,"total":4,"delivered":2,"year":2025},{"id":"mpabp2lyuy8pi1","customerId":"mpabp2lykv01s6","type":"schnitt1","size":0.9,"total":100,"delivered":100,"year":2025},{"id":"mpabqb5wfvkrly","customerId":"mpabqb5we1f0jp","type":"schnitt1","size":1.6,"total":40,"delivered":30,"year":2025},{"id":"mpabrj98whyrah","customerId":"mpabr9yvutjyrm","type":"schnitt1","size":0.9,"total":140,"delivered":140,"year":2025},{"id":"mpabshmcarrwdk","customerId":"mpabshmcxbl82f","type":"schnitt1","size":1.4,"total":10,"delivered":4,"year":2025},{"id":"mpabtag0r2fndd","customerId":"mpabtafza2c7l6","type":"schnitt2","size":1.4,"total":2,"delivered":0,"year":2025},{"id":"mpabuw36er1ceu","customerId":"mpabuw3683k3hs","type":"schnitt1","size":1.4,"total":50,"delivered":32,"year":2025},{"id":"mpabvtvg26s2ad","customerId":"mpabvtvgkq9y7v","type":"schnitt1","size":1.4,"total":15,"delivered":8,"year":2025},{"id":"mpabwapqa3y3z5","customerId":"mpabvtvgkq9y7v","type":"stroh","size":1.6,"total":8,"delivered":0,"year":2025},{"id":"mpabx595xl1b9d","customerId":"mpabx595cx8ty9","type":"schnitt1","size":1.4,"total":16,"delivered":16,"year":2025},{"id":"mpabyiw65b77l0","customerId":"mpabyiw60gff94","type":"schnitt1","size":1.4,"total":24,"delivered":24,"year":2025},{"id":"mpac0iii7us2ao","customerId":"mpac0iiivhdnwm","type":"schnitt1","size":0.9,"total":16,"delivered":10,"year":2025},{"id":"mpac182lrtyfys","customerId":"mpac0iiivhdnwm","type":"schnitt2","size":1.4,"total":9,"delivered":6,"year":2025},{"id":"mpac25fe56pyme","customerId":"mpac25febdeu4s","type":"schnitt1","size":1.4,"total":15,"delivered":3,"year":2025},{"id":"mpac2ytusuetw6","customerId":"mpac2ytudabkqv","type":"schnitt1","size":1.4,"total":50,"delivered":50,"year":2025},{"id":"mpac47ca2eiuwb","customerId":"mpac47ca13p6fn","type":"schnitt1","size":1.4,"total":50,"delivered":42,"year":2025},{"id":"mpac5v4tdnu3qx","customerId":"mpac5h2273qr40","type":"stroh","size":1.3,"total":73,"delivered":73,"year":2025},{"id":"mpac6qlalhg6ex","customerId":"mpac6qla210rwm","type":"schnitt2","size":1.4,"total":15,"delivered":8,"year":2025},{"id":"mpac81hsblnkm3","customerId":"mpac81hsmgse3y","type":"schnitt2","size":1.4,"total":44,"delivered":44,"year":2025},{"id":"mpac9s3sarja2l","customerId":"mpac9s3r66iuq0","type":"schnitt1","size":1.6,"total":12,"delivered":12,"year":2025},{"id":"mpacag9te55z7m","customerId":"mpac9s3r66iuq0","type":"naturschutz","size":1.4,"total":22,"delivered":22,"year":2025},{"id":"mpacbssuyur2a7","customerId":"mpacbssu45llug","type":"schnitt1","size":1.4,"total":20,"delivered":20,"year":2025},{"id":"mpacdyzs52g42w","customerId":"mpacdyzszjzhmr","type":"schnitt1","size":1.6,"total":8,"delivered":3,"year":2025},{"id":"mpaceu0wwp02nw","customerId":"mpacdyzszjzhmr","type":"schnitt1","size":1.4,"total":9,"delivered":4,"year":2025},{"id":"mpacflurful0u7","customerId":"mpacfca0q3jqxw","type":"schnitt1","size":1.4,"total":72,"delivered":72,"year":2025},{"id":"mpacg8y91z74le","customerId":"mpacg8y8hp739k","type":"schnitt1","size":1.6,"total":15,"delivered":15,"year":2025},{"id":"mpach00c84hu41","customerId":"mpach00b58bs3x","type":"schnitt2","size":1.4,"total":8,"delivered":8,"year":2025},{"id":"mpacia1uc8z3qo","customerId":"mpacia1tglw97d","type":"schnitt2","size":1.4,"total":5,"delivered":5,"year":2025},{"id":"mpaf8vy979zd8p","customerId":"mpac5h2273qr40","type":"stroh","size":1.5,"total":70,"delivered":0,"year":2026},{"id":"mpaf9wy7mkzt5g","customerId":"mpabuw3683k3hs","type":"schnitt1","size":1.4,"total":50,"delivered":0,"year":2026},{"id":"mpafe5xjxsm7ie","customerId":"mpacbssu45llug","type":"schnitt1","size":1.4,"total":40,"delivered":0,"year":2026},{"id":"mpaffd97tm27m6","customerId":"mpac2ytudabkqv","type":"schnitt1","size":1.4,"total":50,"delivered":0,"year":2026},{"id":"mpafjoi7qfg9cx","customerId":"mpacg8y8hp739k","type":"schnitt1","size":1.4,"total":40,"delivered":0,"year":2026},{"id":"mpaflfvzbxb8g3","customerId":"mpac9s3r66iuq0","type":"schnitt1","size":1.5,"total":39,"delivered":0,"year":2026},{"id":"mpafn6hppn5dth","customerId":"mpac81hsmgse3y","type":"schnitt2","size":1.4,"total":66,"delivered":0,"year":2026},{"id":"mpafnyvyrfcc5i","customerId":"mpac25febdeu4s","type":"schnitt1","size":1.4,"total":24,"delivered":0,"year":2026},{"id":"mpafotsyudn2fx","customerId":"mpabyiw60gff94","type":"schnitt1","size":1.4,"total":26,"delivered":0,"year":2026},{"id":"mpafpebxpsvmow","customerId":"mpac47ca13p6fn","type":"schnitt1","size":1.4,"total":60,"delivered":0,"year":2026},{"id":"mpafpvptyj3anc","customerId":"mpabnryjf3zfqc","type":"schnitt1","size":1.4,"total":25,"delivered":0,"year":2026},{"id":"mpafqjege2xi8o","customerId":"mpabji6swxod7b","type":"schnitt1","size":0.9,"total":100,"delivered":0,"year":2026},{"id":"mpaft9czz9lm3w","customerId":"mpach00b58bs3x","type":"schnitt2","size":1.4,"total":16,"delivered":0,"year":2026},{"id":"mpaftz5dusxtbj","customerId":"mpabhx9xbkk4hb","type":"schnitt1","size":1.4,"total":50,"delivered":0,"year":2026},{"id":"mpafup3lil4qez","customerId":"mpabshmcxbl82f","type":"schnitt1","size":1.4,"total":25,"delivered":0,"year":2026},{"id":"mpafvasjxgoauy","customerId":"mpabvtvgkq9y7v","type":"schnitt1","size":1.4,"total":15,"delivered":0,"year":2026},{"id":"mpafvr2gnwighh","customerId":"mpabp2lykv01s6","type":"schnitt1","size":0.9,"total":100,"delivered":0,"year":2026},{"id":"mpafway40rlw43","customerId":"mpabmqv0pi33g8","type":"schnitt1","size":1.4,"total":40,"delivered":0,"year":2026},{"id":"mpafws7z4v4hfx","customerId":"mpabr9yvutjyrm","type":"schnitt1","size":0.9,"total":100,"delivered":0,"year":2026},{"id":"mpafxskup5lgmi","customerId":"mpabqb5we1f0jp","type":"schnitt1","size":1.5,"total":40,"delivered":0,"year":2026},{"id":"mpafyl65sdauph","customerId":"mpac6qla210rwm","type":"schnitt2","size":1.4,"total":20,"delivered":0,"year":2026},{"id":"mpafz593n104nx","customerId":"mpabkrcyt845oc","type":"schnitt1","size":1.5,"total":10,"delivered":0,"year":2026},{"id":"mpafzv8frmoeb3","customerId":"mpaboji0f3uhwl","type":"schnitt2","size":1.4,"total":4,"delivered":0,"year":2026},{"id":"mpag0a652lcatu","customerId":"mpabtafza2c7l6","type":"schnitt2","size":1.4,"total":4,"delivered":0,"year":2026},{"id":"mpag1r9nhj617g","customerId":"mpac0iiivhdnwm","type":"schnitt1","size":0.9,"total":25,"delivered":0,"year":2026},{"id":"mpagobghvw9h4q","customerId":"mpabr9yvutjyrm","type":"stroh","size":0.9,"total":10,"delivered":0,"year":2026},{"id":"mpagpxh47dzqmv","customerId":"mpacia1tglw97d","type":"schnitt2","size":1.2,"total":30,"delivered":0,"year":2026}]};
+
+const DEFAULT_FIELDS = [
+  { "id": "f415831648751992296", "name": "Hinterm Hof Franke", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Hinterm Hof Franke" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7669076165092, 52.3009533640936], [10.7671704724992, 52.3005645975955], [10.7668893492639, 52.3005257632746], [10.7667400061938, 52.3007119322358], [10.7665193599622, 52.3006975486835], [10.7665836758554, 52.3004277108154], [10.7667850145947, 52.3004076761392], [10.7669809472704, 52.3003691617814], [10.7671623275741, 52.3003149606797], [10.7673023492631, 52.3002481012361], [10.7674925473359, 52.3001275152694], [10.7675984333637, 52.3000231400227], [10.7688036262348, 52.3006038844351], [10.7676709578277, 52.3009789523194], [10.7675584600419, 52.3010345592308], [10.7674059593374, 52.3009496771466], [10.7670408393985, 52.3010178620237], [10.7669076165092, 52.3009533640936]]] } }] }, "color": "#e6194b", "notes": "", "createdAt": 1779072807 },
+  { "id": "f216422647820792375", "name": "Hinterm Hof Klein", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Hinterm Hof Klein" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7678922201767, 52.3009093363062], [10.7679208539152, 52.3009104332938], [10.768849049156, 52.3006107207743], [10.7691484253062, 52.3007561945651], [10.7681749464582, 52.3011600828288], [10.7680815318426, 52.3010823474337], [10.7676754295445, 52.3009819150295], [10.7678922201767, 52.3009093363062]]] } }] }, "color": "#3cb44b", "notes": "", "createdAt": 1779072807 },
+  { "id": "f62146362625215256", "name": "Hinterm Hof Groß", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Hinterm Hof Groß" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7694065604462, 52.3008256766193], [10.7676351494981, 52.299992494485], [10.7678688514596, 52.2995065385144], [10.7670731110157, 52.2993641718444], [10.766536064038, 52.2992613823146], [10.7665393696733, 52.2992232542501], [10.7664674265853, 52.2992080615695], [10.7663982413105, 52.2992429207125], [10.766235354029, 52.2992071484512], [10.7663245535213, 52.2990452342216], [10.7664517650137, 52.2989143824171], [10.766596882372, 52.2987957571703], [10.7667127042919, 52.2987183413901], [10.7668492896911, 52.2986420108261], [10.7670086031529, 52.2985775737418], [10.767182381541, 52.2985043470029], [10.767348500082, 52.2984414397361], [10.7684764069979, 52.2988238841319], [10.7691733760902, 52.29905335422], [10.7696377179472, 52.2992355858969], [10.7700280445846, 52.2993879893885], [10.7704318565661, 52.2995886329997], [10.7707542400738, 52.2997709528316], [10.7711213040993, 52.2999891367996], [10.7715921617039, 52.3002620744104], [10.7717538678808, 52.3004323738454], [10.771933976361, 52.3006635055117], [10.7720531007946, 52.3008527141402], [10.7721929112819, 52.3015263819565], [10.7713017716939, 52.3016043829527], [10.7701360893232, 52.3010702808948], [10.7700696468416, 52.3010752020849], [10.7694919427186, 52.3007927081809], [10.7694065604462, 52.3008256766193]]] } }] }, "color": "#ffe119", "notes": "", "createdAt": 1779072807 },
+  { "id": "f295311378675556338", "name": "Rieseberg Storchenkurve", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Rieseberg Storchenkurve" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7759575705438, 52.3014006047672], [10.7762903704864, 52.3003699915781], [10.7771945527657, 52.300474039887], [10.7770781380866, 52.3009187763338], [10.7759575705438, 52.3014006047672]]] } }] }, "color": "#4363d8", "notes": "", "createdAt": 1779072807 },
+  { "id": "f276379349402614339", "name": "Scheppau Maschinenschuppen", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Scheppau Maschinenschuppen" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7631806550932, 52.2968363658158], [10.7636147954843, 52.2959885586987], [10.7638616569698, 52.2957318171121], [10.7642823040206, 52.2953410566231], [10.7654692851337, 52.2958979385834], [10.7650533411868, 52.2966421194954], [10.7646268769331, 52.2972902436093], [10.7631806550932, 52.2968363658158]]] } }] }, "color": "#f58231", "notes": "", "createdAt": 1779072807 },
+  { "id": "f225306317280307684", "name": "Scheppau Fricke hinterm Hof", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Scheppau Fricke hinterm Hof" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7503595635064, 52.2899151528034], [10.7507854247572, 52.2902861297777], [10.7504942300745, 52.2904413026687], [10.7497472372212, 52.290965455428], [10.749148075328, 52.2904956852655], [10.7491652433071, 52.2904720152398], [10.74987186694, 52.2901833797968], [10.7503595635064, 52.2899151528034]]] } }] }, "color": "#911eb4", "notes": "", "createdAt": 1779072807 },
+  { "id": "f985833890906612176", "name": "Scheppau Mühle", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Scheppau Mühle" }, "geometry": { "type": "Polygon", "coordinates": [[[10.744007854336, 52.290722410157], [10.7445074936933, 52.2903341459583], [10.7446337755837, 52.2902401801909], [10.7447742403132, 52.2901756284261], [10.7459467931262, 52.2907892293881], [10.7454118469691, 52.2911447299074], [10.7444501353931, 52.2908635834907], [10.744007854336, 52.290722410157]]] } }] }, "color": "#42d4f4", "notes": "", "createdAt": 1779072807 },
+  { "id": "f755078079579169829", "name": "Scheppau ehm. Weideschuppen", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Scheppau ehm. Weideschuppen" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7365618909903, 52.2997652086059], [10.7364129607487, 52.2997137185534], [10.7362814198575, 52.2996178055367], [10.7361056999678, 52.2995480051965], [10.7360262644946, 52.2995071343122], [10.735342908301, 52.2989302796076], [10.7365765507084, 52.2982590760351], [10.737758729818, 52.2991415629528], [10.7365618909903, 52.2997652086059]]] } }] }, "color": "#f032e6", "notes": "", "createdAt": 1779072807 },
+  { "id": "f34881757823665153", "name": "Wohld Poppe", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Wohld Poppe" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7324182530717, 52.3085311732716], [10.7315835987573, 52.3084550382878], [10.7312799254389, 52.3083675115303], [10.7309507119067, 52.3082169305478], [10.7292901307526, 52.3072889747912], [10.7309278676287, 52.3065324920424], [10.7324182530717, 52.3085311732716]]] } }] }, "color": "#bfef45", "notes": "", "createdAt": 1779072807 },
+  { "id": "f15717141306619978", "name": "Wohld Kuhteich Alles", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Wohld Kuhteich Alles" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7343906831296, 52.308771357473], [10.7360224918, 52.308276753067], [10.7387225597505, 52.3075148260778], [10.7391623156421, 52.3081097367371], [10.7389134736269, 52.3081762727381], [10.7388892350195, 52.3082360590647], [10.7389233200472, 52.3083089848297], [10.7391431699556, 52.3085722879632], [10.7392199815245, 52.308607409632], [10.739375170259, 52.3085753933975], [10.7394365863236, 52.308528034773], [10.7394256644997, 52.3084477330662], [10.7392852956525, 52.3082542231914], [10.7421323347388, 52.3074872240945], [10.7434356612593, 52.3092222838542], [10.7436495950548, 52.3093527417983], [10.7439604864626, 52.3097813575802], [10.7400727141939, 52.3093740770337], [10.7399423381331, 52.3093891626343], [10.7398500868892, 52.3094169379344], [10.7397510254933, 52.3094309898595], [10.7395582990711, 52.3094173913832], [10.735341507753, 52.3089314825802], [10.7343906831296, 52.308771357473]]] } }] }, "color": "#fabed4", "notes": "", "createdAt": 1779072807 },
+  { "id": "f480604723485067405", "name": "Tränke Matze vorn", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Tränke Matze vorn" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7411469070466, 52.3107975291964], [10.7406303487094, 52.3101878786797], [10.741105475308, 52.3101927832266], [10.7413607752379, 52.3102179922689], [10.7424118159137, 52.3103724818808], [10.7423117758033, 52.3105673804406], [10.7420050300955, 52.3106132292327], [10.741937329599, 52.3106451378593], [10.741604216216, 52.3107116741203], [10.7411469070466, 52.3107975291964]]] } }] }, "color": "#469990", "notes": "", "createdAt": 1779072807 },
+  { "id": "f319360391648386751", "name": "Tränke Matze kleiner Teich", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Tränke Matze kleiner Teich" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7414404779172, 52.3111048684993], [10.7412487230635, 52.3108785208765], [10.7412562538769, 52.3108421370665], [10.741317639689, 52.3108034660868], [10.7414286888301, 52.3107788895695], [10.7425591614045, 52.3105704619334], [10.7426804015135, 52.3106422370331], [10.7428165254609, 52.3106748005526], [10.7429913085904, 52.3106522062874], [10.7431656653434, 52.3106011711031], [10.743261193485, 52.3105643312531], [10.7445104343594, 52.3106706121973], [10.7444871715432, 52.3107008166156], [10.7421588122027, 52.3110171507099], [10.7414404779172, 52.3111048684993]]] } }] }, "color": "#dcbeff", "notes": "", "createdAt": 1779072807 },
+  { "id": "f561556382169837964", "name": "A39 Heino", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "A39 Heino" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7316851201062, 52.3180474869647], [10.7309024274096, 52.3161636572156], [10.7331931443043, 52.315858372355], [10.7333253090104, 52.3159188055646], [10.7338840826666, 52.3178005620606], [10.7329575144857, 52.3179135173974], [10.7322766381317, 52.3179886698595], [10.7316851201062, 52.3180474869647]]] } }] }, "color": "#9a6324", "notes": "", "createdAt": 1779072807 },
+  { "id": "f710993582294015378", "name": "Feldscheune", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Feldscheune" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7623455002712, 52.3028064313572], [10.762130232267, 52.3027516996707], [10.7615494265848, 52.3026340127035], [10.7617394481934, 52.3023006041946], [10.7626743806245, 52.3024742346026], [10.7624866856184, 52.3028327103723], [10.7623455002712, 52.3028064313572]]] } }] }, "color": "#800000", "notes": "", "createdAt": 1779072807 },
+  { "id": "f792030330145400258", "name": "Hinterm Stall", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Hinterm Stall" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7593660456107, 52.2996766259202], [10.7593003180968, 52.2996660157523], [10.7601104409914, 52.2982359299999], [10.7601724341443, 52.2982292268092], [10.7602869080654, 52.298994963652], [10.7602314556871, 52.2990353132341], [10.7604292043918, 52.300166383739], [10.7600285561538, 52.3001022446837], [10.7598571341476, 52.3000788497097], [10.7596675175933, 52.3000971457788], [10.7591926591685, 52.3000135707247], [10.7593660456107, 52.2996766259202]]] } }] }, "color": "#aaffc3", "notes": "", "createdAt": 1779072807 },
+  { "id": "f406404204521706759", "name": "Breiter Graben Naturschutz", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Breiter Graben Naturschutz" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7608866299791, 52.2962776989305], [10.7602113171445, 52.2965132200102], [10.7601548810521, 52.2965181972748], [10.7600611164762, 52.296514036663], [10.7599672977734, 52.2964939776749], [10.7596957915873, 52.2963897159425], [10.7599781447934, 52.2960086521829], [10.7608866299791, 52.2962776989305]]] } }] }, "color": "#808000", "notes": "", "createdAt": 1779072807 },
+  { "id": "f77976799342606719", "name": "Breiter Graben Große Wiese", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Breiter Graben Große Wiese" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7585389911828, 52.2962505305199], [10.7584671163021, 52.2962518108416], [10.755194826949, 52.2955806718592], [10.7551139473285, 52.2955591287726], [10.7550577714995, 52.2955199515951], [10.7550449962618, 52.2954659014768], [10.7556320326295, 52.2945432046522], [10.7599770906464, 52.2959995140587], [10.759687328831, 52.2963913636795], [10.7595397072428, 52.2964462386212], [10.7595033920279, 52.2964484406255], [10.7594636080023, 52.2964420916382], [10.7593579313429, 52.2964238007204], [10.7590572956597, 52.2963616557733], [10.7585389911828, 52.2962505305199]]] } }] }, "color": "#ffd8b1", "notes": "", "createdAt": 1779072807 },
+  { "id": "f475577370454094196", "name": "Spitze Weide", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Spitze Weide" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7583725709837, 52.2962833433185], [10.7549841957774, 52.2973518357315], [10.7548862703524, 52.2974006585174], [10.7548486589872, 52.297467952365], [10.7537362023883, 52.2994280655043], [10.753628939695, 52.2994112196155], [10.7538023332315, 52.2976677126652], [10.7541085565713, 52.2968661122287], [10.7543244588332, 52.2968411146716], [10.7545524746104, 52.2966055432837], [10.7545537001921, 52.2965098707746], [10.7545093386972, 52.2964235794707], [10.7544619289402, 52.2963850335451], [10.7546397071487, 52.2961923926416], [10.7549201609107, 52.2958040113708], [10.7550679066935, 52.2956042242848], [10.7557298908668, 52.2957424224], [10.7564236984018, 52.2958870212983], [10.7583281764001, 52.2962627647465], [10.7583725709837, 52.2962833433185]]] } }] }, "color": "#000075", "notes": "", "createdAt": 1779072807 },
+  { "id": "f151015800354861826", "name": "Neuansaat", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Neuansaat" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7535833583273, 52.2994054666445], [10.7531127813766, 52.2993218704015], [10.7519721697762, 52.2985465429745], [10.7524613682741, 52.2979089000371], [10.7526363171324, 52.2976375688578], [10.7528885880614, 52.2972743177981], [10.7533104957703, 52.2966516557795], [10.7540724771992, 52.2968747855521], [10.75378763239, 52.2976457564237], [10.7537749805973, 52.2977217641171], [10.7535833583273, 52.2994054666445]]] } }] }, "color": "#a9a9a9", "notes": "", "createdAt": 1779072807 },
+  { "id": "f747944367552370727", "name": "Rieseberg Sportplatz", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Rieseberg Sportplatz" }, "geometry": { "type": "Polygon", "coordinates": [[[10.792803843277, 52.2912136375881], [10.7931477464403, 52.2906030537603], [10.7948082386215, 52.2905122751965], [10.7947721444158, 52.2911206767014], [10.7929125774792, 52.291232560031], [10.792803843277, 52.2912136375881]]] } }] }, "color": "#e6194b", "notes": "", "createdAt": 1779072807 },
+  { "id": "f960386560861733263", "name": "Konietzko 1", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Konietzko 1" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7686247589238, 52.3021979059512], [10.7687023544032, 52.3020070920072], [10.7710611486667, 52.3021233285118], [10.7707740832553, 52.3025499416962], [10.7686247589238, 52.3021979059512]]] } }] }, "color": "#3cb44b", "notes": "", "createdAt": 1779072807 },
+  { "id": "f625044450693899478", "name": "Konietzko 2", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Konietzko 2" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7682080777134, 52.3025486210756], [10.7684773030874, 52.3022197352935], [10.7702968712532, 52.3025347407958], [10.7701955564865, 52.3026275999692], [10.7688942773081, 52.3028722148852], [10.7682080777134, 52.3025486210756]]] } }] }, "color": "#ffe119", "notes": "", "createdAt": 1779072807 },
+  { "id": "f808592550352971405", "name": "Konietzko 3", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Konietzko 3" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7706553963439, 52.3025902018731], [10.7707537701274, 52.3026010971889], [10.7704588138423, 52.3031789892688], [10.7704036032448, 52.3032122836683], [10.770332178761, 52.3031936538835], [10.7702710485656, 52.3030748296959], [10.7701754069941, 52.3030296711665], [10.7699063713891, 52.3029973995085], [10.7696353283608, 52.3029647093296], [10.7696264341653, 52.3030162935555], [10.7695291924391, 52.3030380062666], [10.7694129446184, 52.3030507237993], [10.7692484455567, 52.3030294546423], [10.7689843427417, 52.3029133433992], [10.7706553963439, 52.3025902018731]]] } }] }, "color": "#4363d8", "notes": "", "createdAt": 1779072807 },
+  { "id": "f143867519461825907", "name": "Rotenkamp Tonio ", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Rotenkamp Tonio " }, "geometry": { "type": "Polygon", "coordinates": [[[10.7675473750061, 52.3030656487841], [10.7673585603384, 52.3027906537168], [10.7676779025581, 52.3026436148537], [10.7677088179342, 52.3025833910881], [10.7676890784339, 52.3025342557585], [10.7678343027827, 52.3024105416215], [10.7688024052353, 52.3028464519191], [10.7687456123437, 52.3028668589622], [10.7675473750061, 52.3030656487841]]] } }] }, "color": "#f58231", "notes": "", "createdAt": 1779072807 },
+  { "id": "f929864824848265358", "name": "Rieseberg Flege", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Rieseberg Flege" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7770975810393, 52.3009049375985], [10.7773912981332, 52.2997080855665], [10.7787761164576, 52.2996743600837], [10.7786291008484, 52.300367185074], [10.7770975810393, 52.3009049375985]]] } }] }, "color": "#911eb4", "notes": "", "createdAt": 1779072807 },
+  { "id": "f609402425834489939", "name": "Flege an der Scheppau", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Flege an der Scheppau" }, "geometry": { "type": "Polygon", "coordinates": [[[10.767496460834, 52.298382500562], [10.7682404052402, 52.2980559867418], [10.7704321131209, 52.298812699359], [10.7699968582588, 52.2992422448272], [10.767496460834, 52.298382500562]]] } }] }, "color": "#42d4f4", "notes": "", "createdAt": 1779072807 },
+  { "id": "f635405822208337270", "name": "Flege an der Scheppau Naturschutz", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Flege an der Scheppau Naturschutz" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7704758992582, 52.2988228857739], [10.7705981977505, 52.2988345637314], [10.7717886081717, 52.2987545914533], [10.7718915018948, 52.2987989108962], [10.7711401962384, 52.2995238549248], [10.770964369205, 52.2996497175558], [10.7700678637766, 52.2992106798448], [10.7704758992582, 52.2988228857739]]] } }] }, "color": "#f032e6", "notes": "", "createdAt": 1779072807 },
+  { "id": "f496065095696210964", "name": "Rotenkamp Klaus Kuhn groß", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Rotenkamp Klaus Kuhn groß" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7606486017019, 52.3007386222115], [10.7605933143822, 52.3007189569055], [10.7605443278912, 52.3004098744959], [10.7606223949825, 52.3003344077493], [10.7606158546053, 52.3002843451012], [10.7605480881603, 52.3002462290751], [10.7604045402049, 52.2995733081893], [10.7620180579311, 52.2995192210245], [10.7622845352392, 52.2995157074543], [10.7624059719978, 52.2994986225128], [10.7624651877325, 52.2994769930606], [10.7629400768368, 52.2999857213685], [10.7606486017019, 52.3007386222115]]] } }] }, "color": "#bfef45", "notes": "", "createdAt": 1779072807 },
+  { "id": "f963027535265086943", "name": "Klaus Kuhn klein", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Klaus Kuhn klein" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7606881101422, 52.2995117827361], [10.7605215803541, 52.2993743937093], [10.7603837944035, 52.2993830126414], [10.7603291064623, 52.2990114084457], [10.7616087082438, 52.2985487540315], [10.7618558347695, 52.2988287355119], [10.7617520363469, 52.2988855860275], [10.7618670220429, 52.2989887568052], [10.7619787066709, 52.2989752827565], [10.7624275612702, 52.2994301463337], [10.7623116476557, 52.2994582572413], [10.7621721700683, 52.2994765724104], [10.7606881101422, 52.2995117827361]]] } }] }, "color": "#fabed4", "notes": "", "createdAt": 1779072807 },
+  { "id": "f18513028399993904", "name": "Rotenkamp Osterfeuer", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Rotenkamp Osterfeuer" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7627000818618, 52.3068496069394], [10.7620542201515, 52.3062981834913], [10.7630323580052, 52.3060094050597], [10.763071678036, 52.3060499300548], [10.7631868612271, 52.3060654104007], [10.7633240760477, 52.3061427289019], [10.7634014930146, 52.3061342705048], [10.7639676400663, 52.3066236006471], [10.7627000818618, 52.3068496069394]]] } }] }, "color": "#469990", "notes": "", "createdAt": 1779072807 },
+  { "id": "f832390942558151060", "name": "Rotenkamp Silke Osterfeuer", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Rotenkamp Silke Osterfeuer" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7641132233854, 52.3066581386015], [10.7634845642794, 52.3061070353662], [10.7638323129234, 52.3058988927691], [10.7649775570479, 52.3064539884078], [10.7641132233854, 52.3066581386015]]] } }] }, "color": "#dcbeff", "notes": "", "createdAt": 1779072807 },
+  { "id": "f486579125179863864", "name": "Rotenkamp Silke Boimstorf", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Rotenkamp Silke Boimstorf" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7675579936323, 52.3063442743817], [10.7665197419655, 52.3058399645977], [10.767221201549, 52.3052948712156], [10.7688009589502, 52.3059782757456], [10.7684027450887, 52.3063836888549], [10.7681330206258, 52.3066068220402], [10.7675579936323, 52.3063442743817]]] } }] }, "color": "#9a6324", "notes": "", "createdAt": 1779072807 },
+  { "id": "f98150664657291498", "name": "Rotenkamp A. Hagemann Bauernheg", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Rotenkamp A. Hagemann Bauernheg" }, "geometry": { "type": "Polygon", "coordinates": [[[10.755887674122, 52.309481435075], [10.7557936145149, 52.3093834985571], [10.7560932393811, 52.3083612601595], [10.756832275879, 52.308423273471], [10.7575900195539, 52.3088726363691], [10.7573397441155, 52.3096127783011], [10.755887674122, 52.309481435075]]] } }] }, "color": "#800000", "notes": "", "createdAt": 1779072807 },
+  { "id": "f200096970724032110", "name": "Rotenkamp L. Hagemann Bauernheg", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Rotenkamp L. Hagemann Bauernheg" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7550922652902, 52.3077205615539], [10.7532334013355, 52.3051420146061], [10.7546816587205, 52.3047241250914], [10.7566761566033, 52.3072298197501], [10.7563566468333, 52.3073487858989], [10.7550922652902, 52.3077205615539]]] } }] }, "color": "#aaffc3", "notes": "", "createdAt": 1779072807 },
+  { "id": "f807146545768249384", "name": "Rotenkamp Matze Autobahnbrücke", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Rotenkamp Matze Autobahnbrücke" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7474352799412, 52.3097396437266], [10.7469680807036, 52.309913244457], [10.7467826039968, 52.3099024834183], [10.746450884189, 52.310031938839], [10.7440263328297, 52.3097709890956], [10.7430562634641, 52.308406995998], [10.7454406927261, 52.3077316957492], [10.7454844760739, 52.3078319208105], [10.7453323612568, 52.3079844421478], [10.7452208578182, 52.3083458195478], [10.7451640149778, 52.3086980720663], [10.7450351492602, 52.3089171174673], [10.7449179152326, 52.3089951073324], [10.7447404658011, 52.3091635174264], [10.7447423184432, 52.309276075592], [10.744691092305, 52.309370681642], [10.7446745015274, 52.3095395035332], [10.7447154286565, 52.3096903779335], [10.7447719718526, 52.3097873237717], [10.7448249406069, 52.3097820663877], [10.7447849769385, 52.3096933272277], [10.7447179198086, 52.3095526249358], [10.7447347316047, 52.3094065738727], [10.7448092916854, 52.3092846771904], [10.7449986795033, 52.3090667684531], [10.7451089048441, 52.309016405338], [10.7451639778168, 52.3088421172969], [10.7452718100709, 52.3086565794176], [10.7453206656899, 52.30844062793], [10.7453481816387, 52.3081975035531], [10.7454181259344, 52.3080403936558], [10.7455412289099, 52.3078901412488], [10.7456962845477, 52.3077981089188], [10.7459692722646, 52.3077382980191], [10.7462068450762, 52.3080384352934], [10.7474352799412, 52.3097396437266]]] } }] }, "color": "#808000", "notes": "", "createdAt": 1779072807 },
+  { "id": "f640359621872041272", "name": "Tränke Matze hinten", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Tränke Matze hinten" }, "geometry": { "type": "Polygon", "coordinates": [[[10.730871999096, 52.3107093140051], [10.7306800445145, 52.3107132609383], [10.7305832760122, 52.3106893861899], [10.7304903123914, 52.3106367683421], [10.7303440061637, 52.3106366718584], [10.7302841482908, 52.3106613117019], [10.7302226480097, 52.3107326941497], [10.7302511220243, 52.3107984906993], [10.7295437532844, 52.3108781522495], [10.7291875455877, 52.3108866773882], [10.729286232041, 52.3106861776352], [10.7293917118959, 52.3105048338905], [10.7296133325396, 52.3103096706608], [10.7309948437595, 52.3106182849488], [10.7310681284932, 52.3107050165061], [10.730871999096, 52.3107093140051]]] } }] }, "color": "#ffd8b1", "notes": "", "createdAt": 1779072807 },
+  { "id": "f302813129742490607", "name": "Wohld L. Hagemann", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Wohld L. Hagemann" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7392772383068, 52.3082443520745], [10.7387444679805, 52.307509974851], [10.7415726239112, 52.306700697974], [10.7420936277462, 52.3074818691124], [10.7392772383068, 52.3082443520745]]] } }] }, "color": "#000075", "notes": "", "createdAt": 1779072807 },
+  { "id": "f444418178697676492", "name": "Wohld A. Hagemann Neuansaat", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Wohld A. Hagemann Neuansaat" }, "geometry": { "type": "Polygon", "coordinates": [[[10.733801606069, 52.3051254098845], [10.7355284341602, 52.3043166763464], [10.7365694468813, 52.3055508157058], [10.7347458077679, 52.3063496073578], [10.733801606069, 52.3051254098845]]] } }] }, "color": "#a9a9a9", "notes": "", "createdAt": 1779072807 },
+  { "id": "f601848068525614599", "name": "Wohld Glimmann", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Wohld Glimmann" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7361301725174, 52.3081232675187], [10.73498035051, 52.3067234056561], [10.7350258919039, 52.3062592183386], [10.7365985951824, 52.3055507080362], [10.7355451728595, 52.3043126059867], [10.7367031320746, 52.3037780965224], [10.7370925986711, 52.3042913783623], [10.7370254590275, 52.3043342763323], [10.7370594459006, 52.3043860397006], [10.7372264185588, 52.3044542328964], [10.7383417041332, 52.3059729218896], [10.7381907246494, 52.3060357116744], [10.7382429305241, 52.3061924572008], [10.738403453789, 52.3062408518622], [10.7385407471004, 52.30622639138], [10.7392982124395, 52.30722940691], [10.7361301725174, 52.3081232675187]]] } }] }, "color": "#e6194b", "notes": "", "createdAt": 1779072807 },
+  { "id": "f250865626301377763", "name": "Glentorf H. Altenbach 1", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Glentorf H. Altenbach 1" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7749650825353, 52.3389997886474], [10.7735246358969, 52.3383902042128], [10.7731013012543, 52.3383898263159], [10.7733925857733, 52.3382449616903], [10.7766988661225, 52.338027668937], [10.7766376701134, 52.3380806221084], [10.7749650825353, 52.3389997886474]]] } }] }, "color": "#3cb44b", "notes": "", "createdAt": 1779072807 },
+  { "id": "f956803988766279101", "name": "Glentorf H. Altenbach 2", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Glentorf H. Altenbach 2" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7749453967961, 52.3390615343133], [10.7767506795171, 52.3380786115082], [10.7772519038119, 52.3380464163106], [10.7771295522713, 52.3390839408787], [10.776722807828, 52.3390075032801], [10.7749453967961, 52.3390615343133]]] } }] }, "color": "#ffe119", "notes": "", "createdAt": 1779072807 },
+  { "id": "f644652936129951307", "name": "Glentorf A. Altenbach Groß", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Glentorf A. Altenbach Groß" }, "geometry": { "type": "Polygon", "coordinates": [[[10.8071144410536, 52.3397770120542], [10.8016423101682, 52.3408703508547], [10.801143165934, 52.3400331632625], [10.8067032823505, 52.3389620539484], [10.8071144410536, 52.3397770120542]]] } }] }, "color": "#4363d8", "notes": "", "createdAt": 1779072807 },
+  { "id": "f396290773770555507", "name": "Rotenkamp Renneberg", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Rotenkamp Renneberg" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7502265808048, 52.3105300193537], [10.7500142619035, 52.3092989774106], [10.7517002198716, 52.3088106851195], [10.751256584935, 52.310613772154], [10.7502265808048, 52.3105300193537]]] } }] }, "color": "#f58231", "notes": "", "createdAt": 1779072807 },
+  { "id": "f310852692144011905", "name": "Rieseberg Renneberg", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Rieseberg Renneberg" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7907721285905, 52.2979616019781], [10.7906928002696, 52.297921063948], [10.7905396198901, 52.2979908700154], [10.790008923949, 52.2978040333102], [10.7901928214328, 52.2976368897044], [10.7901665191608, 52.2975733025612], [10.7904869512039, 52.2974034945212], [10.7904926758051, 52.297312731696], [10.7920053608595, 52.2971659180382], [10.792123548437, 52.297242191351], [10.7907721285905, 52.2979616019781]]] } }] }, "color": "#911eb4", "notes": "", "createdAt": 1779072807 },
+  { "id": "f889213264455957740", "name": "Rieseberg Renneberg Fiscchteiche", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Rieseberg Renneberg Fiscchteiche" }, "geometry": { "type": "Polygon", "coordinates": [[[10.8074152884051, 52.297392582845], [10.8051926835349, 52.2966213335823], [10.8069415094825, 52.2948063933313], [10.8074152884051, 52.297392582845]]] } }] }, "color": "#42d4f4", "notes": "", "createdAt": 1779072807 },
+  { "id": "f431093801144085858", "name": "Schulze an der Scheppau (Hoppe)", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Schulze an der Scheppau (Hoppe)" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7721591850101, 52.30048644488], [10.7717102630988, 52.3000553801812], [10.7711491209396, 52.2997537352052], [10.7711648172367, 52.2996127741615], [10.771926446787, 52.2988205819533], [10.7729812314108, 52.2990401460589], [10.7721591850101, 52.30048644488]]] } }] }, "color": "#f032e6", "notes": "", "createdAt": 1779072807 },
+  { "id": "f802084429826593280", "name": "Schulze Wiesenmasch", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Schulze Wiesenmasch" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7836792699988, 52.2993311062294], [10.7829028897583, 52.2990811868707], [10.7827949135031, 52.2989903536545], [10.782160963579, 52.2988749029754], [10.7819173186958, 52.2985937201718], [10.7822161493026, 52.2984077472287], [10.7840226112991, 52.2989832039755], [10.7836792699988, 52.2993311062294]]] } }] }, "color": "#bfef45", "notes": "", "createdAt": 1779072807 },
+  { "id": "f554078526532476158", "name": "Schulze Fischteiche Rieseberg", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Schulze Fischteiche Rieseberg" }, "geometry": { "type": "Polygon", "coordinates": [[[10.8085444740572, 52.2978076003695], [10.8083063509857, 52.2977125566608], [10.8083243031969, 52.2976113877342], [10.8082134324976, 52.2975619392177], [10.8079739584345, 52.2974967344253], [10.8083898233295, 52.297045270472], [10.8090584166175, 52.2972644995989], [10.8085444740572, 52.2978076003695]]] } }] }, "color": "#fabed4", "notes": "", "createdAt": 1779072807 },
+  { "id": "f115611048182596245", "name": "Scheppau Jochen Schrader", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Scheppau Jochen Schrader" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7526380571269, 52.2942580372087], [10.753483821626, 52.2936691132932], [10.7554615268391, 52.2947594750283], [10.7549974087852, 52.2954764439751], [10.7526380571269, 52.2942580372087]]] } }] }, "color": "#469990", "notes": "", "createdAt": 1779072807 },
+  { "id": "f409518210653366555", "name": "Hordorf Hasselbach", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Hordorf Hasselbach" }, "geometry": { "type": "Polygon", "coordinates": [[[10.6622881298606, 52.2951515377968], [10.6625407284928, 52.2945285665114], [10.6634329116152, 52.2946518402833], [10.6639900568728, 52.2947641852025], [10.664799798523, 52.2957295151646], [10.6650597975574, 52.2962982552895], [10.6651391212144, 52.2964839974266], [10.6638599465318, 52.2963064480117], [10.6640738518149, 52.2953700130875], [10.6622881298606, 52.2951515377968]]] } }] }, "color": "#dcbeff", "notes": "", "createdAt": 1779072807 },
+  { "id": "f503597816589763592", "name": "Renneberg Mühlenriede Lauingen", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Renneberg Mühlenriede Lauingen" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7981257304305, 52.2869664534824], [10.7963359451843, 52.2849753998944], [10.7964375377131, 52.2847531816162], [10.7983482834232, 52.2851818592584], [10.7997842365704, 52.2868577763397], [10.7981257304305, 52.2869664534824]]] } }] }, "color": "#9a6324", "notes": "", "createdAt": 1779072807 },
+  { "id": "f40257555963728298", "name": "Renneberg Rotenkamp Spitze", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Renneberg Rotenkamp Spitze" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7482480268477, 52.3103906546123], [10.7478444734508, 52.309991335316], [10.7494049641906, 52.3095830880078], [10.7501250644997, 52.3105061323499], [10.7494647414682, 52.3105349034024], [10.7489683894159, 52.3104857585837], [10.7482480268477, 52.3103906546123]]] } }] }, "color": "#800000", "notes": "", "createdAt": 1779072807 },
+  { "id": "f205438072923472179", "name": "Siestedt klein", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Siestedt klein" }, "geometry": { "type": "Polygon", "coordinates": [[[11.0953432128119, 52.3360461895426], [11.0945233846687, 52.3344940567294], [11.0964019694062, 52.3347113957455], [11.0958777326078, 52.3361016551293], [11.0953432128119, 52.3360461895426]]] } }] }, "color": "#aaffc3", "notes": "", "createdAt": 1779072807 },
+  { "id": "f74246324881485705", "name": "Siestedt groß", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Siestedt groß" }, "geometry": { "type": "Polygon", "coordinates": [[[11.0960068542557, 52.3345869831642], [11.0944038884628, 52.3343695604012], [11.0938264645019, 52.333223950846], [11.0928559129839, 52.3327998532479], [11.092896259775, 52.3327059908454], [11.0971416020015, 52.3316571109402], [11.0973618727383, 52.3315046640533], [11.09757827426, 52.3311987654104], [11.0979904272679, 52.3305155969235], [11.098591940973, 52.3305551426632], [11.0988036878139, 52.330495385301], [11.0988617347083, 52.330548833318], [11.0960068542557, 52.3345869831642]]] } }] }, "color": "#808000", "notes": "", "createdAt": 1779072807 },
+  { "id": "f45132313224532105", "name": "Siestedt mittel", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Siestedt mittel" }, "geometry": { "type": "Polygon", "coordinates": [[[11.0984030520485, 52.3315877843151], [11.1004124913774, 52.3288057224994], [11.100787144307, 52.3289013990268], [11.1009951689081, 52.3289814620894], [11.1011529965767, 52.3290993293892], [11.1012156106289, 52.3291961207349], [11.1012136043088, 52.3294364029137], [11.1012313635058, 52.3295446893271], [11.1013255019765, 52.3296010730605], [11.1018420696665, 52.3295776472119], [11.1025522458556, 52.3296668428009], [11.1026066387043, 52.3301738886581], [11.1012812328582, 52.3300570240886], [11.0994016294504, 52.3314770748969], [11.0992562530995, 52.3315520893048], [11.0990205944993, 52.3315955260104], [11.0988530859725, 52.3316049140634], [11.0984030520485, 52.3315877843151]]] } }] }, "color": "#ffd8b1", "notes": "", "createdAt": 1779072807 },
+  { "id": "f327763683134118537", "name": "Renneberg Schweinemast", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Renneberg Schweinemast" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7686249406742, 52.2720366031326], [10.7682393629469, 52.2703306572173], [10.7689657113172, 52.2702449792907], [10.7693271390432, 52.2719629466143], [10.7686249406742, 52.2720366031326]]] } }] }, "color": "#000075", "notes": "", "createdAt": 1779072807 },
+  { "id": "f96028872628077209", "name": "Renneberg bei Scholz", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Renneberg bei Scholz" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7887840731308, 52.2705629984962], [10.7947134626168, 52.2699038402526], [10.7949151399192, 52.2706621418104], [10.7890682484669, 52.2713111453201], [10.7887840731308, 52.2705629984962]]] } }] }, "color": "#a9a9a9", "notes": "", "createdAt": 1779072807 },
+  { "id": "f170388650730839774", "name": "Renneberg Baggersee", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Renneberg Baggersee" }, "geometry": { "type": "Polygon", "coordinates": [[[10.8020925073986, 52.306997627453], [10.8023600713306, 52.3065541466926], [10.8052000520967, 52.3070597634347], [10.8049402908218, 52.3075103235017], [10.8041359982327, 52.3076282569945], [10.8035672829823, 52.3081262683573], [10.8030805019072, 52.3078551598926], [10.8026897327373, 52.3075163169084], [10.8020925073986, 52.306997627453]]] } }] }, "color": "#e6194b", "notes": "", "createdAt": 1779072807 },
+  { "id": "f25585391477988363", "name": "Glentorf H.Altenbach bei Ohse", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Glentorf H.Altenbach bei Ohse" }, "geometry": { "type": "Polygon", "coordinates": [[[10.778200606595, 52.3280485981687], [10.7791306500538, 52.327467004054], [10.7809624797124, 52.3280978591588], [10.7799456973794, 52.3287757160699], [10.772923484783, 52.3285100666522], [10.7727941542684, 52.3284569947566], [10.7737135463273, 52.3278761990036], [10.778200606595, 52.3280485981687]]] } }] }, "color": "#3cb44b", "notes": "", "createdAt": 1779072807 },
+  { "id": "f76433148308602828", "name": "Glentorf H.Altenbach Schunter", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Glentorf H.Altenbach Schunter" }, "geometry": { "type": "Polygon", "coordinates": [[[10.8006815115404, 52.3350619305294], [10.8029409833983, 52.333539324958], [10.8030232692131, 52.333561511612], [10.8030579443751, 52.3336085952738], [10.8029493704673, 52.3339174081305], [10.8028238196932, 52.3341823409116], [10.8026587367108, 52.3344405636482], [10.8023977089678, 52.3348144784562], [10.8017900093685, 52.3356625337747], [10.8016888845871, 52.3356358739357], [10.8006815115404, 52.3350619305294]]] } }] }, "color": "#ffe119", "notes": "", "createdAt": 1779072807 },
+  { "id": "f407373050273662804", "name": "Weber Hausweide", "geoJSON": { "type": "FeatureCollection", "features": [{ "type": "Feature", "properties": { "name": "Weber Hausweide" }, "geometry": { "type": "Polygon", "coordinates": [[[10.7690738454873, 52.3007894590016], [10.7699340236832, 52.3011853815632], [10.7687723317202, 52.3014893393291], [10.7685285034406, 52.3014980975433], [10.7684649173013, 52.301467877901], [10.7683192010048, 52.3013437315223], [10.768176470116, 52.3011609170016], [10.7690738454873, 52.3007894590016]]] } }] }, "color": "#4363d8", "notes": "", "createdAt": 1779072807 }
+];
+// ============ INIT ============
+loadData();
+if (state.customers.length === 0 && state.reservations.length === 0) {
+  state.customers = JSON.parse(JSON.stringify(DEFAULT_DATA.customers));
+  state.reservations = JSON.parse(JSON.stringify(DEFAULT_DATA.reservations));
+  saveData();
+}
+if (state.fields.length === 0 && DEFAULT_FIELDS.length > 0) { state.fields = JSON.parse(JSON.stringify(DEFAULT_FIELDS)); saveData(); }
+checkPINStatus();
+loadBackupHandle().then(h => { backupHandle = h; renderSidebar(); });
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js', { scope: './' }).catch(()=>{});
+}
+// Start pending sync polling on PC
+startPendingSyncPolling();
+let deferredPrompt = null;
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById('installBtn');
+  if (btn) btn.style.display = 'flex';
+});
+function installPWA() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(result => {
+      if (result.outcome === 'accepted') showToast('App installiert');
+      deferredPrompt = null;
+    });
+    return;
+  }
+  showModal(`
+    <h3 style="margin-bottom:12px;">App auf dem Handy installieren</h3>
+    <ol style="text-align:left;line-height:1.8;padding-left:20px;">
+      <li>Chrome-Menü öffnen (⋮)</li>
+      <li><b>"App installieren"</b> oder <b>"Zum Startbildschirm"</b> wählen</li>
+      <li>App öffnet sich wie eine normale App</li>
+      <li>Funktioniert auch <b>ohne PC</b> (Offline)</li>
+    </ol>
+    <p style="margin-top:16px;color:var(--text-light);font-size:0.9rem;">Nach der Installation über das App-Icon öffnen, nicht über den Browser.</p>
+    <button class="btn btn-primary" onclick="closeModal()" style="margin-top:16px;">OK</button>
+  `);
+}
+</script>
+</body>
+</html>
+

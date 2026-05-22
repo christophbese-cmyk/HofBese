@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HofBese - Handy Installation</title>
+<style>
+  body { font-family: -apple-system, sans-serif; text-align: center; padding: 40px 20px; background: #f0f2f5; }
+  h1 { color: #1B5E20; margin-bottom: 8px; }
+  .subtitle { color: #666; margin-bottom: 24px; }
+  #qrcode { margin: 20px auto; }
+  .steps { max-width: 400px; margin: 30px auto; text-align: left; background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .steps h3 { color: #1B5E20; margin-bottom: 12px; }
+  .steps ol { padding-left: 20px; }
+  .steps li { margin-bottom: 8px; line-height: 1.5; }
+  .url { background: #e8f5e9; padding: 8px 12px; border-radius: 6px; font-family: monospace; font-size: 0.9rem; word-break: break-all; margin: 12px 0; }
+  .ip { font-weight: 700; color: #1B5E20; }
+</style>
+</head>
+<body>
+<h1>HofBese</h1>
+<p class="subtitle">QR-Code mit dem Handy scannen</p>
+<div id="qrcode"></div>
+<div class="url">URL: <span class="ip" id="ipUrl"></span></div>
+<div class="steps">
+  <h3>So installierst du die App:</h3>
+  <ol>
+    <li><strong>QR-Code scannen</strong> (Kamera-App oder QR-Scanner)</li>
+    <li>Seite öffnet sich im <strong>Chrome</strong></li>
+    <li>Chrome-Menü () → <strong>"Zum Startbildschirm hinzufügen"</strong></li>
+    <li>Bestätigen → <strong>HofBese-Icon</strong> erscheint auf dem Homescreen</li>
+  </ol>
+</div>
+<script src="qrcode.min.js"></script>
+<script>
+  fetch('/api/ip')
+    .then(r => r.json())
+    .then(data => {
+      const url = `http://${data.ip}:${data.port}`;
+      document.getElementById('ipUrl').textContent = url;
+      new QRCode(document.getElementById('qrcode'), {
+        text: url,
+        width: 256,
+        height: 256,
+        colorDark: '#1B5E20',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    });
+</script>
+</body>
+</html>

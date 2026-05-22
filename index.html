@@ -658,7 +658,8 @@ function fetchApi(path, opts) { return fetch(api(path), opts); }
 function setServerUrl() {
   const el = document.getElementById('serverUrlInput');
   if (!el) return;
-  const url = el.value.trim().replace(/\/+$/, '');
+  let url = el.value.trim().replace(/\/+$/, '');
+  if (url && !/^https?:\/\//i.test(url)) url = 'http://' + url;
   _serverBaseUrl = url;
   if (url) {
     localStorage.setItem('heubestellung_server_url', url);
@@ -1548,7 +1549,17 @@ function confirmSyncFromPhone() {
       }
     })
     .catch(() => {
-      showToast('Server nicht erreichbar');
+      // Server nicht erreichbar
+      if (_serverBaseUrl) {
+        // Server konfiguriert aber nicht erreichbar → PIN-Screen zeigen (Nutzer kann PIN eingeben)
+        showPINScreen('check');
+      } else if (state.customers.length > 0) {
+        hidePINScreen();
+        showToast('Offline – kein Server-PIN erforderlich');
+        startReconnect();
+      } else {
+        showPINScreen('setup');
+      }
     });
 }
 

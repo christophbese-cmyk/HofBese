@@ -353,6 +353,7 @@ header .save-btn:hover { background: rgba(255,255,255,0.3); }
     <img src="icons/icon-192.png" class="app-logo" alt="Logo">
     <h1 id="appTitle">HofBese</h1>
     <span id="offlineBadge" style="display:none;background:#ff8a65;color:#fff;font-size:0.65rem;font-weight:700;padding:3px 8px;border-radius:4px;">OFFLINE</span>
+    <button id="syncRequestBtn" onclick="onSyncRequestTap()" style="display:none;background:#ff9800;color:#fff;border:none;font-size:0.65rem;font-weight:700;padding:3px 8px;border-radius:4px;cursor:pointer;white-space:nowrap;">📲 SYNC</button>
     <button class="save-btn" onclick="saveData();showToast('Daten gespeichert')" title="Speichern"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button>
     <button class="save-btn" onclick="importData()" title="Import"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
     <button class="save-btn" id="installBtn" onclick="installPWA()" title="App installieren"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
@@ -544,6 +545,23 @@ function pinSubmit() {
     return;
   }
 
+  // confirmSync: PIN bestätigen und Daten an PC senden
+  if (_pinMode === 'confirmSync') {
+    if (_pinHash && hashPIN(_pinBuffer) === _pinHash) {
+      hidePINScreen();
+      _pinMode = 'check';
+      pushDataToServer();
+    } else {
+      const error = document.getElementById('pinError');
+      error.textContent = 'PIN falsch';
+      error.style.display = 'block';
+      shakeDots();
+      _pinBuffer = '';
+      updatePINDots();
+    }
+    return;
+  }
+
   // check mode: erst lokal prüfen
   if (_pinHash) {
     if (hashPIN(_pinBuffer) === _pinHash) {
@@ -704,38 +722,63 @@ function tryConnectServer() {
 
 // Handy: Prüft ob PC Sync angefordert hat
 let _syncRequestTimer = null;
+let _syncRequestPending = false;
 function startSyncRequestPolling() {
   if (_syncRequestTimer) return;
   _syncRequestTimer = setInterval(() => {
     if (!_syncEnabled) return;
     const isMobile = window.innerWidth < 768;
     if (!isMobile) return;
+    if (_syncRequestPending) return;
     fetch('/api/sync-request', { headers: getPINHeader(), signal: AbortSignal.timeout(3000) })
       .then(r => r.json())
       .then(data => {
-        if (data.requested) {
-          console.log('PC fordert Sync an – sende Daten...');
-          showToast('PC fordert Daten an – sende...');
-          fetch('/api/data', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...getPINHeader(), 'X-Device': _deviceName },
-            body: JSON.stringify({
-              customers: state.customers, reservations: state.reservations,
-              fields: state.fields, workLogs: state.workLogs, harvests: state.harvests,
-              hallSlots: state.hallSlots, device: _deviceName
-            }),
-            signal: AbortSignal.timeout(5000)
-          })
-          .then(r => r.json())
-          .then(() => {
-            fetch('/api/sync-request', { method: 'DELETE', headers: getPINHeader() }).catch(()=>{});
-            showToast('Daten an PC gesendet');
-          })
-          .catch(() => {});
+        if (data.requested && !_syncRequestPending) {
+          _syncRequestPending = true;
+          renderAll();
+          renderSidebar();
+          updateOfflineBadge();
+          showToast('📲 PC fordert Daten an – Sync bestätigen');
         }
       })
       .catch(() => {});
   }, 3000);
+}
+function onSyncRequestTap() {
+  // PIN-Eingabe zur Bestätigung verlangen
+  if (_pinHash) {
+    _pinMode = 'confirmSync';
+    document.getElementById('pinTitle').textContent = 'Sync bestätigen';
+    document.getElementById('pinSubtitle').textContent = 'PIN zur Bestätigung eingeben';
+    document.getElementById('pinOverlay').style.display = 'flex';
+    pinClear();
+  } else {
+    // Kein PIN gesetzt – direkt pushen
+    pushDataToServer();
+  }
+}
+function pushDataToServer() {
+  showToast('Sende Daten an PC...');
+  fetch('/api/data', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getPINHeader(), 'X-Device': _deviceName },
+    body: JSON.stringify({
+      customers: state.customers, reservations: state.reservations,
+      fields: state.fields, workLogs: state.workLogs, harvests: state.harvests,
+      hallSlots: state.hallSlots, device: _deviceName
+    }),
+    signal: AbortSignal.timeout(5000)
+  })
+  .then(r => r.json())
+  .then(() => {
+    fetch('/api/sync-request', { method: 'DELETE', headers: getPINHeader() }).catch(()=>{});
+    _syncRequestPending = false;
+    updateOfflineBadge();
+    renderAll();
+    renderSidebar();
+    showToast('Daten an PC gesendet');
+  })
+  .catch(() => { showToast('Fehler beim Senden'); });
 }
 
 function showFirstTimeSyncModal(serverData) {
@@ -1094,6 +1137,8 @@ function renderAll() {
 function updateOfflineBadge() {
   const badge = document.getElementById('offlineBadge');
   if (badge) badge.style.display = _syncEnabled ? 'none' : 'inline';
+  const syncBtn = document.getElementById('syncRequestBtn');
+  if (syncBtn) syncBtn.style.display = (_syncRequestPending && _syncEnabled) ? 'inline' : 'none';
 }
 
 function renderBackup() {
